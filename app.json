@@ -4,11 +4,11 @@
     "slug": "webee-mo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/branding/webee_logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/branding/webee_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,20 +17,21 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/branding/webee_logo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/branding/webee_logo.png"
     },
     "plugins": [
       "expo-router"
     ],
     "extra": {
-      "WEATHER_API_KEY": "af3abab5447ba09c9b99af1252e0808e"
+      "WEATHER_API_KEY": "af3abab5447ba09c9b99af1252e0808e",
+      "apiUrl": "https://api.webee.sbs"
     }
   }
 }
