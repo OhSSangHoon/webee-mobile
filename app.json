@@ -3,6 +3,7 @@
     "name": "webee-mo",
     "slug": "webee-mo",
     "version": "1.0.0",
+    "scheme": "webee",
     "orientation": "portrait",
     "icon": "./assets/branding/webee_logo.png",
     "userInterfaceStyle": "light",
