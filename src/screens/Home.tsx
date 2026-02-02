@@ -1,11 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, FlatList, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useWeather, getWeatherIcon } from '@/features/weather';
 import { Card } from '@/components/Card';
+import { api } from '@/lib/api';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32;
@@ -17,13 +17,15 @@ const TIPS = [
   { id: '3', title: '습도 체크', content: '습도가 높으면 벌의 활동량이 감소합니다', condition: '일반' },
 ];
 
-interface Farm {
-  id: string;
-  name: string;
-  location: string;
-  crop: string;
-  facilityType: string;
-  area: string;
+// API 응답 타입
+interface UserCrop {
+  id: number;
+  name: string | null;
+  variety: string | null;
+  cultivationType: 'CONTROLLED' | 'OPEN_FIELD';
+  cultivationAddress: string | null;
+  cultivationArea: number;
+  plantingDate: string;
 }
 
 interface NewsItem {
@@ -34,14 +36,16 @@ interface NewsItem {
   source: string;
 }
 
-// TODO: 실제 API 연동 후 데이터 가져오기
-const sampleFarms: Farm[] = [];
-
 const sampleNews: NewsItem[] = [
   { id: '1', title: '2026년 수정벌 지원사업 신청 시작', preview: '농림축산식품부에서 올해 수정벌 보급 지원사업을 확대 시행합니다...', date: '2026.01.26', source: '농업신문' },
   { id: '2', title: '겨울철 수정벌 관리 요령', preview: '저온기 시설하우스에서 수정벌의 활동성을 높이기 위한 관리 방법...', date: '2026.01.24', source: '농촌진흥청' },
   { id: '3', title: '토마토 농가 수정벌 활용 성공사례', preview: '경남 창원시 토마토 재배 농가에서 수확량을 30% 향상시킨 사례...', date: '2026.01.22', source: '농업기술센터' },
 ];
+
+// 재배 방식 라벨 변환
+const getCultivationTypeLabel = (type: string) => {
+  return type === 'CONTROLLED' ? '시설재배' : '노지재배';
+};
 
 export default function Home() {
   const router = useRouter();
@@ -49,6 +53,26 @@ export default function Home() {
   const { weather, loading: weatherLoading } = useWeather();
   const [currentFarmIndex, setCurrentFarmIndex] = useState(0);
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const [farms, setFarms] = useState<UserCrop[]>([]);
+  const [farmsLoading, setFarmsLoading] = useState(true);
+
+  // 농지 목록 조회
+  useEffect(() => {
+    const fetchFarms = async () => {
+      try {
+        const response = await api.get('/api/v1/profile/crops');
+        if (response.data.code === '200' || response.data.code === 'OK') {
+          setFarms(response.data.data || []);
+        }
+      } catch (error) {
+        console.error('농지 목록 조회 실패:', error);
+      } finally {
+        setFarmsLoading(false);
+      }
+    };
+
+    fetchFarms();
+  }, []);
 
   const userName = user?.fullName || user?.username || '사용자';
   const today = new Date();
@@ -65,7 +89,7 @@ export default function Home() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <View className="flex-1 bg-gray-100">
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* 1. 인사말 + 날씨 */}
         <View className="px-4 pt-4 mb-4">
@@ -136,12 +160,19 @@ export default function Home() {
         <View className="mb-4">
           <View className="flex-row items-center justify-between px-4 mb-2">
             <Text className="text-lg font-bold text-gray-900">내 농지</Text>
+            <Pressable onPress={() => router.push('/add-farm')}>
+              <Feather name="plus" size={22} color="#6B7280" />
+            </Pressable>
           </View>
 
-          {sampleFarms.length > 0 ? (
+          {farmsLoading ? (
+            <View className="mx-4 bg-white rounded-2xl p-8 items-center">
+              <Text className="text-sm text-gray-400">로딩중...</Text>
+            </View>
+          ) : farms.length > 0 ? (
             <>
               <FlatList
-                data={sampleFarms}
+                data={farms}
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
@@ -150,7 +181,7 @@ export default function Home() {
                 contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
                 onScroll={onFarmScroll}
                 scrollEventThrottle={16}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                   <Pressable
                     className="bg-white rounded-2xl p-4 active:scale-[0.98]"
@@ -158,11 +189,19 @@ export default function Home() {
                   >
                     <View className="flex-row items-center">
                       <View className="w-11 h-11 rounded-xl bg-blue-50 items-center justify-center mr-3">
-                        <Feather name="home" size={18} color="#3B82F6" />
+                        <Feather
+                          name={item.cultivationType === 'CONTROLLED' ? 'home' : 'sun'}
+                          size={18}
+                          color="#3B82F6"
+                        />
                       </View>
                       <View className="flex-1">
-                        <Text className="text-base font-semibold text-gray-900">{item.name}</Text>
-                        <Text className="text-sm text-gray-500 mt-0.5">{item.location}</Text>
+                        <Text className="text-base font-semibold text-gray-900">
+                          {item.name || '이름 없음'}
+                        </Text>
+                        <Text className="text-sm text-gray-500 mt-0.5">
+                          {item.cultivationAddress || '주소 미등록'}
+                        </Text>
                       </View>
                       <Feather name="chevron-right" size={20} color="#C7C7CC" />
                     </View>
@@ -170,25 +209,31 @@ export default function Home() {
                     <View className="flex-row">
                       <View className="flex-1 items-center">
                         <Text className="text-xs text-gray-500 mb-1">작물</Text>
-                        <Text className="text-sm font-semibold text-gray-900">{item.crop}</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {item.name || '-'}
+                        </Text>
                       </View>
                       <View className="w-px bg-gray-100" />
                       <View className="flex-1 items-center">
                         <Text className="text-xs text-gray-500 mb-1">시설</Text>
-                        <Text className="text-sm font-semibold text-gray-900">{item.facilityType}</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {getCultivationTypeLabel(item.cultivationType)}
+                        </Text>
                       </View>
                       <View className="w-px bg-gray-100" />
                       <View className="flex-1 items-center">
                         <Text className="text-xs text-gray-500 mb-1">면적</Text>
-                        <Text className="text-sm font-semibold text-gray-900">{item.area}</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {item.cultivationArea}평
+                        </Text>
                       </View>
                     </View>
                   </Pressable>
                 )}
               />
-              {sampleFarms.length > 1 && (
+              {farms.length > 1 && (
                 <View className="flex-row justify-center mt-3 gap-1.5">
-                  {sampleFarms.map((_, index) => (
+                  {farms.map((_, index) => (
                     <View
                       key={index}
                       className={`h-1.5 rounded-full ${index === currentFarmIndex ? 'w-4 bg-blue-500' : 'w-1.5 bg-gray-300'}`}
@@ -198,11 +243,14 @@ export default function Home() {
               )}
             </>
           ) : (
-            <View className="mx-4 bg-white rounded-2xl p-8 items-center">
+            <Pressable
+              onPress={() => router.push('/add-farm')}
+              className="mx-4 bg-white rounded-2xl p-8 items-center active:scale-[0.98]"
+            >
               <Feather name="map" size={32} color="#C7C7CC" />
               <Text className="text-base font-semibold text-gray-900 mt-3">등록된 농지가 없습니다</Text>
-              <Text className="text-sm text-gray-500 mt-1">마이페이지에서 농지를 등록해주세요</Text>
-            </View>
+              <Text className="text-sm text-gray-500 mt-1">탭하여 농지를 등록해보세요</Text>
+            </Pressable>
           )}
         </View>
 
@@ -224,7 +272,7 @@ export default function Home() {
         </View>
 
         {/* 5. 수정벌 뉴스 캐러셀 */}
-        <View className="mb-8"> 
+        <View className="mb-8">
           <View className="flex-row items-center justify-between px-4 mb-2">
             <Text className="text-lg font-bold text-gray-900">수정벌 뉴스</Text>
             <Pressable className="flex-row items-center">
@@ -265,6 +313,6 @@ export default function Home() {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
