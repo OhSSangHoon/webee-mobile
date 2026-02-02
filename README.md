@@ -118,8 +118,4 @@ pnpm web
 
 ---
 
-## API
-
-- Base URL: `https://api.webee.sbs`
-- 인증: JWT Bearer Token
-- 문서: `swagger.md` 참고
+- Base URL: `https://weebelab.com`
