@@ -1,151 +1,157 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Alert, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, Pressable, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { Card } from '@/components/Card';
-import { Button } from '@/components/Button';
-import { Input } from '@/components/Input';
 
-export default function ProfileScreen() {
-  const router = useRouter();
-  const { user, logout, updateProfile, isLoading } = useAuthStore();
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: user?.fullName || '',
-    email: user?.email || '',
-    phoneNumber: user?.phoneNumber || '',
-    cultivationAddress: user?.cultivationAddress || '',
-  });
+interface MenuItemProps {
+  icon: keyof typeof Feather.glyphMap;
+  label: string;
+  onPress: () => void;
+  rightElement?: React.ReactNode;
+  danger?: boolean;
+}
 
-  const handleSave = async () => {
-    try {
-      await updateProfile(formData);
-      setIsEditing(false);
-      Alert.alert('성공', '프로필이 업데이트되었습니다');
-    } catch (error: any) {
-      Alert.alert('오류', error.response?.data?.error || '프로필 업데이트에 실패했습니다');
-    }
-  };
-
-  const handleLogout = async () => {
-    Alert.alert('로그아웃', '로그아웃 하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '로그아웃',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/login');
-        },
-      },
-    ]);
+function MenuItem({ icon, label, onPress, rightElement, danger = false }: MenuItemProps) {
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1 px-4 py-6">
-        <View className="items-center mb-8">
-          <View className="w-24 h-24 bg-blue-100 rounded-full items-center justify-center mb-4">
-            <Text className="text-4xl">👤</Text>
-          </View>
-          <Text className="text-2xl font-bold text-gray-900">
-            {user?.fullName || user?.username}
-          </Text>
-          <Text className="text-gray-600">{user?.email}</Text>
-        </View>
+    <Pressable
+      onPress={handlePress}
+      className="flex-row items-center px-4 py-3 active:bg-gray-50"
+    >
+      <Feather
+        name={icon}
+        size={20}
+        color={danger ? "#FF3B30" : "#8E8E93"}
+        style={{ marginRight: 12 }}
+      />
+      <Text className={`flex-1 text-base ${danger ? 'text-red-500' : 'text-gray-900'}`}>
+        {label}
+      </Text>
+      {rightElement || <Feather name="chevron-right" size={18} color="#C7C7CC" />}
+    </Pressable>
+  );
+}
 
-        <Card className="mb-4">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900">내 정보</Text>
-            <Pressable onPress={() => setIsEditing(!isEditing)}>
-              <Text className="text-blue-600 font-semibold">
-                {isEditing ? '취소' : '수정'}
+export default function Profile() {
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  const userName = user?.fullName || user?.username || '사용자';
+
+  const handleAddFarmland = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/add-farm');
+  };
+
+  const handleLogout = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    logout();
+    router.replace('/login');
+  };
+
+  const handleDeleteAccount = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // TODO: 계정 삭제 확인 모달
+    console.log('계정 삭제');
+  };
+
+  return (
+    <ScrollView className="flex-1 bg-gray-100" showsVerticalScrollIndicator={false}>
+      {/* 프로필 섹션 */}
+      <View className="px-4 pt-4 mb-4">
+        <Pressable className="flex-row items-center bg-white rounded-2xl p-4 active:scale-[0.98]">
+          <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mr-3">
+            <Feather name="user" size={28} color="#8E8E93" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-lg font-semibold text-gray-900">{userName}님</Text>
+            <Text className="text-sm text-gray-500 mt-0.5">프로필 관리</Text>
+          </View>
+          <Feather name="chevron-right" size={18} color="#C7C7CC" />
+        </Pressable>
+      </View>
+
+      {/* 내 농지 섹션 */}
+      <View className="mb-4">
+        <Text className="text-xs font-semibold text-gray-500 mb-2 px-5">내 농지</Text>
+        <View className="mx-4 bg-white rounded-2xl overflow-hidden">
+          <Pressable
+            className="flex-row items-center p-4 active:bg-gray-50"
+            onPress={handleAddFarmland}
+          >
+            <View className="w-10 h-10 rounded-xl bg-blue-50 items-center justify-center mr-3">
+              <Feather name="plus" size={20} color="#3B82F6" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-semibold text-gray-900">농지 추가하기</Text>
+              <Text className="text-sm text-gray-500 mt-0.5">
+                농지를 등록하고 맞춤 서비스를 이용해보세요
               </Text>
-            </Pressable>
-          </View>
+            </View>
+            <Feather name="chevron-right" size={18} color="#C7C7CC" />
+          </Pressable>
+        </View>
+      </View>
 
-          {isEditing ? (
-            <>
-              <Input
-                label="이름"
-                value={formData.fullName}
-                onChangeText={(text) => setFormData({ ...formData, fullName: text })}
-                containerClassName="mb-3"
+      {/* 설정 섹션 */}
+      <View className="mb-4">
+        <Text className="text-xs font-semibold text-gray-500 mb-2 px-5">설정</Text>
+        <View className="mx-4 bg-white rounded-2xl overflow-hidden">
+          <MenuItem
+            icon="bell"
+            label="알림"
+            onPress={() => setNotificationsEnabled(!notificationsEnabled)}
+            rightElement={
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={setNotificationsEnabled}
+                trackColor={{ false: "#E5E5EA", true: "#F59E0B" }}
+                thumbColor="#FFFFFF"
               />
-              <Input
-                label="이메일"
-                value={formData.email}
-                onChangeText={(text) => setFormData({ ...formData, email: text })}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                containerClassName="mb-3"
-              />
-              <Input
-                label="전화번호"
-                value={formData.phoneNumber}
-                onChangeText={(text) => setFormData({ ...formData, phoneNumber: text })}
-                keyboardType="phone-pad"
-                containerClassName="mb-3"
-              />
-              <Input
-                label="재배지 주소"
-                value={formData.cultivationAddress}
-                onChangeText={(text) => setFormData({ ...formData, cultivationAddress: text })}
-                containerClassName="mb-4"
-              />
-              <Button onPress={handleSave} loading={isLoading}>
-                저장
-              </Button>
-            </>
-          ) : (
-            <>
-              <View className="mb-3">
-                <Text className="text-sm text-gray-500 mb-1">사용자명</Text>
-                <Text className="text-gray-900">{user?.username}</Text>
+            }
+          />
+          <View className="h-px bg-gray-100 ml-11" />
+          <MenuItem
+            icon="globe"
+            label="언어"
+            onPress={() => {}}
+            rightElement={
+              <View className="flex-row items-center gap-1">
+                <Text className="text-base text-gray-500">한국어</Text>
+                <Feather name="chevron-right" size={18} color="#C7C7CC" />
               </View>
-              <View className="mb-3">
-                <Text className="text-sm text-gray-500 mb-1">이름</Text>
-                <Text className="text-gray-900">{user?.fullName || '-'}</Text>
-              </View>
-              <View className="mb-3">
-                <Text className="text-sm text-gray-500 mb-1">이메일</Text>
-                <Text className="text-gray-900">{user?.email || '-'}</Text>
-              </View>
-              <View className="mb-3">
-                <Text className="text-sm text-gray-500 mb-1">전화번호</Text>
-                <Text className="text-gray-900">{user?.phoneNumber || '-'}</Text>
-              </View>
-              <View>
-                <Text className="text-sm text-gray-500 mb-1">재배지 주소</Text>
-                <Text className="text-gray-900">{user?.cultivationAddress || '-'}</Text>
-              </View>
-            </>
-          )}
-        </Card>
+            }
+          />
+          <View className="h-px bg-gray-100 ml-11" />
+          <MenuItem icon="help-circle" label="고객센터" onPress={() => {}} />
+          <View className="h-px bg-gray-100 ml-11" />
+          <MenuItem icon="file-text" label="이용약관" onPress={() => {}} />
+          <View className="h-px bg-gray-100 ml-11" />
+          <MenuItem icon="shield" label="개인정보처리방침" onPress={() => {}} />
+        </View>
+      </View>
 
-        <Pressable
-          onPress={() => {}}
-          className="bg-white rounded-2xl p-4 mb-3 flex-row items-center justify-between active:scale-95"
-        >
-          <View className="flex-row items-center">
-            <Ionicons name="cart" size={24} color="#6b7280" />
-            <Text className="ml-3 text-gray-900 font-medium">주문 내역</Text>
-          </View>
-          <View className="px-3 py-1 bg-gray-100 rounded-full">
-            <Text className="text-xs font-medium text-gray-600">개발 중</Text>
-          </View>
-        </Pressable>
+      {/* 계정 섹션 */}
+      <View className="mb-4">
+        <Text className="text-xs font-semibold text-gray-500 mb-2 px-5">계정</Text>
+        <View className="mx-4 bg-white rounded-2xl overflow-hidden">
+          <MenuItem icon="log-out" label="로그아웃" onPress={handleLogout} />
+          <View className="h-px bg-gray-100 ml-11" />
+          <MenuItem icon="trash-2" label="계정 삭제" onPress={handleDeleteAccount} danger />
+        </View>
+      </View>
 
-        <Pressable
-          onPress={handleLogout}
-          className="bg-white rounded-2xl p-4 mb-3 flex-row items-center active:scale-95"
-        >
-          <Ionicons name="log-out" size={24} color="#ef4444" />
-          <Text className="ml-3 text-red-600 font-medium">로그아웃</Text>
-        </Pressable>
-      </ScrollView>
-    </SafeAreaView>
+      {/* 버전 정보 */}
+      <View className="items-center py-4 mb-8">
+        <Text className="text-sm text-gray-400">버전 1.0.0</Text>
+      </View>
+    </ScrollView>
   );
 }
