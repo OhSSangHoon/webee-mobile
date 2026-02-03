@@ -1,86 +1,318 @@
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, FlatList, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { WeatherUI } from '@/src/features/weather';
-import { NewsCarousel } from '@/src/features/news';
+import { Feather } from '@expo/vector-icons';
+import { useAuthStore } from '@/stores/useAuthStore';
+import { useWeather, getWeatherIcon } from '@/features/weather';
+import { Card } from '@/components/Card';
+import { api } from '@/lib/api';
 
-const FEATURES_DATA = [
-  {
-    icon: "🩺",
-    title: "수정벌 진단",
-    description: "AI 기반 이미지 분석으로 수정벌의 건강 상태와 질병을 정확하게 진단해드립니다 ↗",
-    link: "/diagnosis",
-  },
-  {
-    icon: "🌾",
-    title: "수정벌 추천",
-    description: "재배하시는 농작물의 특성에 맞는 최적의 수정벌 품종을 추천해드립니다 ↗",
-    link: "/recommend",
-  },
-  {
-    icon: "🫱🏻‍🫲🏻",
-    title: "거래 연결",
-    description: "신뢰할 수 있는 양봉장들과 직접 연결하여 안전한 수정벌 거래를 지원합니다 ↗",
-    link: "/search",
-  },
-  {
-    icon: "📺",
-    title: "수정벌 소식",
-    description: "벌에 관한 모든 소식, 생태 환경, 정책 변화, 기술 동향을 확인할 수 있습니다. ↗",
-    link: "/news",
-  },
-  {
-    icon: "🔍",
-    title: "맞춤 농약",
-    description: "수정벌에 따른 농약 사용 궁금하신 분들을 위해 맞춤 농약 추천 서비스를 제공합니다 ↗",
-    link: "/pesticide",
-  },
-  {
-    icon: "🤖",
-    title: "챗봇 기능",
-    description: "수정벌 관련 궁금한 점들을 24시간 언제든지 AI챗봇과 대화로 해결하세요",
-  },
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH - 32;
+const NEWS_CARD_WIDTH = SCREEN_WIDTH - 44;
+
+const TIPS = [
+  { id: '1', title: '온도 관리', content: '뒤영벌은 10~28도에서 가장 활발합니다', condition: '일반' },
+  { id: '2', title: '농약 주의', content: '수정벌 투입 전 농약 사용을 중단하세요', condition: '주의' },
+  { id: '3', title: '습도 체크', content: '습도가 높으면 벌의 활동량이 감소합니다', condition: '일반' },
 ];
+
+// API 응답 타입
+interface UserCrop {
+  id: number;
+  name: string | null;
+  variety: string | null;
+  cultivationType: 'CONTROLLED' | 'OPEN_FIELD';
+  cultivationAddress: string | null;
+  cultivationArea: number;
+  plantingDate: string;
+}
+
+interface NewsItem {
+  id: string;
+  title: string;
+  preview: string;
+  date: string;
+  source: string;
+}
+
+const sampleNews: NewsItem[] = [
+  { id: '1', title: '2026년 수정벌 지원사업 신청 시작', preview: '농림축산식품부에서 올해 수정벌 보급 지원사업을 확대 시행합니다...', date: '2026.01.26', source: '농업신문' },
+  { id: '2', title: '겨울철 수정벌 관리 요령', preview: '저온기 시설하우스에서 수정벌의 활동성을 높이기 위한 관리 방법...', date: '2026.01.24', source: '농촌진흥청' },
+  { id: '3', title: '토마토 농가 수정벌 활용 성공사례', preview: '경남 창원시 토마토 재배 농가에서 수확량을 30% 향상시킨 사례...', date: '2026.01.22', source: '농업기술센터' },
+];
+
+// 재배 방식 라벨 변환
+const getCultivationTypeLabel = (type: string) => {
+  return type === 'CONTROLLED' ? '시설재배' : '노지재배';
+};
 
 export default function Home() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const { weather, loading: weatherLoading } = useWeather();
+  const [currentFarmIndex, setCurrentFarmIndex] = useState(0);
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const [farms, setFarms] = useState<UserCrop[]>([]);
+  const [farmsLoading, setFarmsLoading] = useState(true);
 
-  const handleClick = (link?: string) => {
-    if (!link) return;
-    router.push(link);
+  // 농지 목록 조회
+  useEffect(() => {
+    const fetchFarms = async () => {
+      try {
+        const response = await api.get('/api/v1/profile/crops');
+        if (response.data.code === '200' || response.data.code === 'OK') {
+          setFarms(response.data.data || []);
+        }
+      } catch (error) {
+        console.error('농지 목록 조회 실패:', error);
+      } finally {
+        setFarmsLoading(false);
+      }
+    };
+
+    fetchFarms();
+  }, []);
+
+  const userName = user?.fullName || user?.username || '사용자';
+  const today = new Date();
+  const dateString = `${today.getMonth() + 1}월 ${today.getDate()}일`;
+
+  const onFarmScroll = (event: any) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / CARD_WIDTH);
+    setCurrentFarmIndex(index);
+  };
+
+  const onTipScroll = (event: any) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / CARD_WIDTH);
+    setCurrentTipIndex(index);
   };
 
   return (
-    <ScrollView className="flex-1 bg-white p-4">
-      {/* 날씨 위젯 */}
-      <WeatherUI />
-
-      {/* 기능 섹션 */}
-      <Text className="text-xl font-bold text-main-900 mt-8 mb-4">
-        Webee의 특별한 기능을 누려보세요!
-      </Text>
-      <View className="flex-row flex-wrap justify-between">
-        {FEATURES_DATA.map((feature) => (
-          <TouchableOpacity
-            key={feature.title}
-            onPress={() => handleClick(feature.link)}
-            activeOpacity={0.8}
-            className="w-[31%] pb-4"
-          >
-            <View className="w-full h-25 bg-main-500 rounded-xl flex flex-col items-center justify-center py-2">
-              <Text className="text-3xl py-2">{feature.icon}</Text>
-              <Text className="text-sm font-medium text-gray-900 text-center" numberOfLines={2}>
-                {feature.title}
-              </Text>
+    <View className="flex-1 bg-gray-100">
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        {/* 1. 인사말 + 날씨 */}
+        <View className="px-4 pt-4 mb-4">
+          <Card>
+            <View className="flex-row justify-between items-start">
+              <View>
+                <Text className="text-sm text-gray-500 mb-1">{dateString}</Text>
+                <Text className="text-xl font-bold text-gray-900">
+                  안녕하세요, {userName}님
+                </Text>
+              </View>
+              {weather && !weatherLoading ? (
+                <View className="flex-row items-center">
+                  <View className="w-11 h-11 rounded-xl bg-yellow-50 items-center justify-center mr-2">
+                    <Feather name={getWeatherIcon(weather.icon)} size={24} color="#F59E0B" />
+                  </View>
+                  <View className="items-end">
+                    <Text className="text-2xl font-bold text-gray-900">{weather.temperature}°</Text>
+                    <Text className="text-sm text-gray-500">{weather.description}</Text>
+                  </View>
+                </View>
+              ) : weatherLoading ? (
+                <Text className="text-sm text-gray-400">날씨 로딩중...</Text>
+              ) : null}
             </View>
-          </TouchableOpacity>
-        ))}
-      </View>
+          </Card>
+        </View>
 
-      {/* 뉴스 섹션 */}
-      <Text className="text-xl font-bold text-main-900 mt-6 mb-4">
-        오늘의 주요 뉴스를 확인하세요!
-      </Text>
-      <NewsCarousel />
-    </ScrollView>
+        {/* 2. 팁 배너 캐러셀 */}
+        <View className="mb-4">
+          <FlatList
+            data={TIPS}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={CARD_WIDTH + 12}
+            decelerationRate="fast"
+            contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+            onScroll={onTipScroll}
+            scrollEventThrottle={16}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View
+                className="bg-yellow-400 rounded-2xl p-4"
+                style={{ width: CARD_WIDTH }}
+              >
+                <View className="self-start bg-black/10 px-2.5 py-1 rounded-full mb-2">
+                  <Text className="text-xs font-semibold text-black">{item.condition}</Text>
+                </View>
+                <Text className="text-base font-bold text-black mb-1">{item.title}</Text>
+                <Text className="text-sm text-black/70">{item.content}</Text>
+              </View>
+            )}
+          />
+          {TIPS.length > 1 && (
+            <View className="flex-row justify-center mt-3 gap-1.5">
+              {TIPS.map((_, index) => (
+                <View
+                  key={index}
+                  className={`h-1.5 rounded-full ${index === currentTipIndex ? 'w-4 bg-yellow-500' : 'w-1.5 bg-gray-300'}`}
+                />
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* 3. 내 농지 섹션 */}
+        <View className="mb-4">
+          <View className="flex-row items-center justify-between px-4 mb-2">
+            <Text className="text-lg font-bold text-gray-900">내 농지</Text>
+            <Pressable onPress={() => router.push('/add-farm')}>
+              <Feather name="plus" size={22} color="#6B7280" />
+            </Pressable>
+          </View>
+
+          {farmsLoading ? (
+            <View className="mx-4 bg-white rounded-2xl p-8 items-center">
+              <Text className="text-sm text-gray-400">로딩중...</Text>
+            </View>
+          ) : farms.length > 0 ? (
+            <>
+              <FlatList
+                data={farms}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={CARD_WIDTH + 12}
+                decelerationRate="fast"
+                contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+                onScroll={onFarmScroll}
+                scrollEventThrottle={16}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <Pressable
+                    className="bg-white rounded-2xl p-4 active:scale-[0.98]"
+                    style={{ width: CARD_WIDTH }}
+                  >
+                    <View className="flex-row items-center">
+                      <View className="w-11 h-11 rounded-xl bg-blue-50 items-center justify-center mr-3">
+                        <Feather
+                          name={item.cultivationType === 'CONTROLLED' ? 'home' : 'sun'}
+                          size={18}
+                          color="#3B82F6"
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-base font-semibold text-gray-900">
+                          {item.name || '이름 없음'}
+                        </Text>
+                        <Text className="text-sm text-gray-500 mt-0.5">
+                          {item.cultivationAddress || '주소 미등록'}
+                        </Text>
+                      </View>
+                      <Feather name="chevron-right" size={20} color="#C7C7CC" />
+                    </View>
+                    <View className="h-px bg-gray-100 my-3" />
+                    <View className="flex-row">
+                      <View className="flex-1 items-center">
+                        <Text className="text-xs text-gray-500 mb-1">작물</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {item.name || '-'}
+                        </Text>
+                      </View>
+                      <View className="w-px bg-gray-100" />
+                      <View className="flex-1 items-center">
+                        <Text className="text-xs text-gray-500 mb-1">시설</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {getCultivationTypeLabel(item.cultivationType)}
+                        </Text>
+                      </View>
+                      <View className="w-px bg-gray-100" />
+                      <View className="flex-1 items-center">
+                        <Text className="text-xs text-gray-500 mb-1">면적</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {item.cultivationArea}평
+                        </Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                )}
+              />
+              {farms.length > 1 && (
+                <View className="flex-row justify-center mt-3 gap-1.5">
+                  {farms.map((_, index) => (
+                    <View
+                      key={index}
+                      className={`h-1.5 rounded-full ${index === currentFarmIndex ? 'w-4 bg-blue-500' : 'w-1.5 bg-gray-300'}`}
+                    />
+                  ))}
+                </View>
+              )}
+            </>
+          ) : (
+            <Pressable
+              onPress={() => router.push('/add-farm')}
+              className="mx-4 bg-white rounded-2xl p-8 items-center active:scale-[0.98]"
+            >
+              <Feather name="map" size={32} color="#C7C7CC" />
+              <Text className="text-base font-semibold text-gray-900 mt-3">등록된 농지가 없습니다</Text>
+              <Text className="text-sm text-gray-500 mt-1">탭하여 농지를 등록해보세요</Text>
+            </Pressable>
+          )}
+        </View>
+
+        {/* 4. 리포트 이동 링크 */}
+        <View className="px-4 mb-4">
+          <Pressable
+            onPress={() => router.push('/diagnose')}
+            className="bg-white rounded-2xl p-4 flex-row items-center active:scale-[0.98]"
+          >
+            <View className="w-13 h-13 rounded-xl bg-yellow-100 items-center justify-center mr-3">
+              <Feather name="edit-3" size={24} color="#F59E0B" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-semibold text-gray-900">농장 환경 리포트</Text>
+              <Text className="text-sm text-gray-500 mt-0.5">환경 데이터를 입력하고 맞춤 분석 받기</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="#C7C7CC" />
+          </Pressable>
+        </View>
+
+        {/* 5. 수정벌 뉴스 캐러셀 */}
+        <View className="mb-8">
+          <View className="flex-row items-center justify-between px-4 mb-2">
+            <Text className="text-lg font-bold text-gray-900">수정벌 뉴스</Text>
+            <Pressable className="flex-row items-center">
+              <Text className="text-sm text-gray-500">전체보기</Text>
+              <Feather name="chevron-right" size={16} color="#8E8E93" />
+            </Pressable>
+          </View>
+
+          <FlatList
+            data={sampleNews}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={NEWS_CARD_WIDTH + 12}
+            decelerationRate="fast"
+            contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <Pressable
+                className="bg-white rounded-2xl p-4 active:scale-[0.98]"
+                style={{ width: NEWS_CARD_WIDTH }}
+              >
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-xs font-semibold text-blue-600">{item.source}</Text>
+                  <Text className="text-xs text-gray-400">{item.date}</Text>
+                </View>
+                <Text className="text-base font-semibold text-gray-900 mb-2" numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <Text className="text-sm text-gray-500 mb-3" numberOfLines={2}>
+                  {item.preview}
+                </Text>
+                <View className="flex-row items-center">
+                  <Text className="text-sm font-semibold text-blue-600">자세히 보기</Text>
+                  <Feather name="arrow-right" size={14} color="#3B82F6" />
+                </View>
+              </Pressable>
+            )}
+          />
+        </View>
+      </ScrollView>
+    </View>
   );
 }

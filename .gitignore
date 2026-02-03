@@ -44,3 +44,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# documentation (local only)
+error.md
+weather.md
+swagger.md
