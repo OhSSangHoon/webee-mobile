@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { Platform, Pressable, View, Image, TextInput, Alert, KeyboardAvoidingView, ScrollView } from 'react-native';
+import { Pressable, View, Image, TextInput, Alert, Platform, ScrollView } from 'react-native';
 import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/Button';
+import { useKeyboard } from '@/hooks/useKeyboard';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -97,80 +98,93 @@ export default function LoginScreen() {
   };
 
   // 이메일 로그인 폼 화면
+  const { isVisible: isKeyboardVisible, keyboardHeight } = useKeyboard();
+  const insets = useSafeAreaInsets();
+
   if (showEmailLogin) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1"
-        >
-          <ScrollView
-            className="flex-1"
-            contentContainerClassName="flex-1 justify-center px-6"
-            keyboardShouldPersistTaps="handled"
+      <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+        {/* 뒤로가기 */}
+        <View className="px-4 py-2">
+          <Pressable
+            onPress={() => setShowEmailLogin(false)}
+            className="w-11 h-11 items-center justify-center"
           >
-            {/* 뒤로가기 */}
-            <Pressable
-              onPress={() => setShowEmailLogin(false)}
-              className="absolute top-4 left-0 p-2"
-            >
-              <Feather name="arrow-left" size={24} color="#000" />
-            </Pressable>
+            <Feather name="arrow-left" size={24} color="#000" />
+          </Pressable>
+        </View>
 
-            {/* 로고 */}
-            <View className="items-center mb-10">
-              <Image
-                source={require('../../assets/branding/webee_logo.png')}
-                style={{ width: 80, height: 80 }}
-                resizeMode="contain"
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 24,
+            paddingBottom: isKeyboardVisible ? keyboardHeight + 100 : 120
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* 로고 */}
+          <View className="items-center mb-10">
+            <Image
+              source={require('../../assets/branding/webee_logo.png')}
+              style={{ width: 80, height: 80 }}
+              resizeMode="contain"
+            />
+            <Text className="text-2xl font-bold text-black mt-4">로그인</Text>
+          </View>
+
+          {/* 입력 폼 */}
+          <View className="gap-4">
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">아이디</Text>
+              <TextInput
+                value={username}
+                onChangeText={setUsername}
+                placeholder="아이디를 입력하세요"
+                autoCapitalize="none"
+                autoCorrect={false}
+                className="w-full h-12 px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900"
+                placeholderTextColor="#9ca3af"
               />
-              <Text className="text-2xl font-bold text-black mt-4">로그인</Text>
             </View>
 
-            {/* 입력 폼 */}
-            <View className="gap-4">
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-2">아이디</Text>
-                <TextInput
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder="아이디를 입력하세요"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  className="w-full h-12 px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-
-              <View>
-                <Text className="text-sm font-medium text-gray-700 mb-2">비밀번호</Text>
-                <TextInput
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="비밀번호를 입력하세요"
-                  secureTextEntry
-                  className="w-full h-12 px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900"
-                  placeholderTextColor="#9ca3af"
-                />
-              </View>
-
-              <Button
-                onPress={handleEmailLogin}
-                loading={isLoading}
-                className="mt-4"
-              >
-                로그인
-              </Button>
-
-              <View className="flex-row justify-center items-center mt-4">
-                <Text className="text-gray-600">계정이 없으신가요? </Text>
-                <Pressable onPress={handleGoToRegister}>
-                  <Text className="text-blue-600 font-semibold">회원가입</Text>
-                </Pressable>
-              </View>
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">비밀번호</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                placeholder="비밀번호를 입력하세요"
+                secureTextEntry
+                className="w-full h-12 px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900"
+                placeholderTextColor="#9ca3af"
+              />
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+
+            <View className="flex-row justify-center items-center mt-4">
+              <Text className="text-gray-600">계정이 없으신가요? </Text>
+              <Pressable onPress={handleGoToRegister}>
+                <Text className="text-blue-600 font-semibold">회원가입</Text>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+
+        <View
+          className="absolute left-0 right-0 px-6 pt-3 bg-white"
+          style={{
+            bottom: isKeyboardVisible ? keyboardHeight : 0,
+            paddingBottom: isKeyboardVisible ? 12 : insets.bottom + 16,
+          }}
+        >
+          <Button
+            onPress={handleEmailLogin}
+            loading={isLoading}
+          >
+            로그인
+          </Button>
+        </View>
       </SafeAreaView>
     );
   }
@@ -192,7 +206,7 @@ export default function LoginScreen() {
             />
           </View>
           <Text className="text-3xl font-bold text-black tracking-tight">Webee</Text>
-          <Text className="text-base text-gray-500 mt-1">수정벌 통합 관리 플랫폼</Text>
+          <Text className="text-base text-gray-600 mt-1">수정벌 통합 관리 플랫폼</Text>
         </Animated.View>
 
         {/* 버튼 섹션 */}
@@ -230,7 +244,7 @@ export default function LoginScreen() {
           {/* 구분선 */}
           <View className="flex-row items-center my-4">
             <View className="flex-1 h-px bg-gray-200" />
-            <Text className="text-sm text-gray-400 mx-4">또는</Text>
+            <Text className="text-sm text-gray-600 mx-4">또는</Text>
             <View className="flex-1 h-px bg-gray-200" />
           </View>
 
@@ -241,7 +255,7 @@ export default function LoginScreen() {
           </Pressable>
 
           <Pressable onPress={handleGoToRegister} className="items-center py-1">
-            <Text className="text-sm text-gray-500">
+            <Text className="text-sm text-gray-600">
               계정이 없으신가요? <Text className="text-blue-500 font-medium">회원가입</Text>
             </Text>
           </Pressable>
@@ -252,9 +266,9 @@ export default function LoginScreen() {
           entering={FadeIn.delay(300).duration(500)}
           className="items-center px-8"
         >
-          <Text className="text-sm text-gray-400 text-center leading-5">
-            계속 진행하면 <Text className="text-gray-500 underline">서비스 이용약관</Text> 및{'\n'}
-            <Text className="text-gray-500 underline">개인정보 처리방침</Text>에 동의하게 됩니다.
+          <Text className="text-sm text-gray-600 text-center leading-5">
+            계속 진행하면 <Text className="text-gray-600 underline">서비스 이용약관</Text> 및{'\n'}
+            <Text className="text-gray-600 underline">개인정보 처리방침</Text>에 동의하게 됩니다.
           </Text>
         </Animated.View>
       </View>
