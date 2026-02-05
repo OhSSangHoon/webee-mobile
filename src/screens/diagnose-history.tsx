@@ -1,78 +1,105 @@
-import { View, Text, ScrollView, Image } from 'react-native';
+import { View, Text, ScrollView, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import { useDiagnosisList } from '@/features/diagnosis';
 import { Card } from '@/components/Card';
 import { Loading } from '@/components/Loading';
-import type { Diagnosis } from '@/types';
+import { DISEASE_LABELS } from '@/types/bee-diagnosis';
 
 export default function DiagnosisHistoryScreen() {
-  const { data: diagnoses, isLoading } = useQuery({
-    queryKey: ['diagnoses'],
-    queryFn: async () => {
-      const { data } = await api.get<Diagnosis[]>('/api/diagnoses');
-      return data;
-    },
-  });
+  const router = useRouter();
+  const { data: diagnoses, isLoading } = useDiagnosisList();
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 80) return 'bg-green-100 text-green-700';
+    if (confidence >= 50) return 'bg-orange-100 text-orange-700';
+    return 'bg-red-100 text-red-700';
+  };
 
   if (isLoading) {
     return <Loading text="진단 기록을 불러오는 중..." />;
   }
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'healthy':
-        return 'bg-green-100 text-green-800';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'critical':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <ScrollView className="flex-1 px-4 py-6">
-        <Text className="text-2xl font-bold text-gray-900 mb-6">진단 기록</Text>
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+        <Pressable
+          onPress={() => router.back()}
+          className="w-10 h-10 items-center justify-center -ml-2"
+        >
+          <Feather name="chevron-left" size={24} color="#111827" />
+        </Pressable>
+        <Text className="text-lg font-semibold text-gray-900">진단 기록</Text>
+        <View className="w-10" />
+      </View>
 
+      <ScrollView className="flex-1 px-4 py-4">
         {!diagnoses || diagnoses.length === 0 ? (
           <Card className="items-center py-12">
-            <Text className="text-6xl mb-4">📋</Text>
+            <View className="w-16 h-16 rounded-full bg-gray-100 items-center justify-center mb-4">
+              <Feather name="clipboard" size={32} color="#9CA3AF" />
+            </View>
             <Text className="text-lg font-semibold text-gray-900 mb-2">
               진단 기록이 없습니다
             </Text>
-            <Text className="text-gray-600 text-center">
-              벌의 건강 상태를 진단해보세요
+            <Text className="text-gray-500 text-center mb-4">
+              꿀벌 질병 진단을 받아보세요
             </Text>
+            <Pressable
+              onPress={() => router.push('/bee-diagnosis')}
+              className="bg-blue-600 px-6 py-3 rounded-xl"
+            >
+              <Text className="text-white font-semibold">진단 시작하기</Text>
+            </Pressable>
           </Card>
         ) : (
-          <View className="space-y-4">
+          <View className="gap-3">
             {diagnoses.map((diagnosis) => (
-              <Card key={diagnosis.id} className="overflow-hidden">
-                {diagnosis.imageUrl && (
-                  <Image
-                    source={{ uri: diagnosis.imageUrl }}
-                    className="w-full h-48 rounded-xl mb-4"
-                    resizeMode="cover"
-                  />
-                )}
-                <View className={`px-3 py-2 rounded-lg mb-3 ${getSeverityColor(diagnosis.severity)}`}>
-                  <Text className="font-semibold">{diagnosis.diseaseName}</Text>
-                </View>
-                <View className="mb-2">
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">증상</Text>
-                  <Text className="text-gray-600">{diagnosis.symptoms}</Text>
-                </View>
-                <View className="mb-2">
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">권장 조치</Text>
-                  <Text className="text-gray-600">{diagnosis.recommendations}</Text>
-                </View>
-                <Text className="text-xs text-gray-500 mt-3">
-                  {new Date(diagnosis.createdAt).toLocaleString('ko-KR')}
-                </Text>
-              </Card>
+              <Pressable
+                key={diagnosis.beeDiagnosisId}
+                onPress={() => router.push(`/bee-diagnosis-detail/${diagnosis.beeDiagnosisId}`)}
+                className="active:scale-[0.98]"
+              >
+                <Card>
+                  <View className="flex-row">
+                    {diagnosis.imageUrl && (
+                      <Image
+                        source={{ uri: diagnosis.imageUrl }}
+                        className="w-20 h-20 rounded-xl mr-3"
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View className="flex-1">
+                      <Text className="text-base font-semibold text-gray-900 mb-1">
+                        {DISEASE_LABELS[diagnosis.diseaseType] || diagnosis.diseaseType}
+                      </Text>
+                      <View
+                        className={`self-start px-2 py-1 rounded-full mb-2 ${
+                          getConfidenceColor(diagnosis.confidence).split(' ')[0]
+                        }`}
+                      >
+                        <Text
+                          className={`text-xs font-medium ${
+                            getConfidenceColor(diagnosis.confidence).split(' ')[1]
+                          }`}
+                        >
+                          신뢰도 {diagnosis.confidence.toFixed(1)}%
+                        </Text>
+                      </View>
+                      <Text className="text-xs text-gray-500">
+                        {new Date(diagnosis.createdAt).toLocaleDateString('ko-KR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </Text>
+                    </View>
+                    <Feather name="chevron-right" size={20} color="#9CA3AF" />
+                  </View>
+                </Card>
+              </Pressable>
             ))}
           </View>
         )}
