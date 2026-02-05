@@ -2,11 +2,14 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '@/lib/api';
+import { registerTokenCallbacks } from '@/lib/tokenManager';
+import { queryClient } from '@/providers';
 import type { User, LoginRequest, RegisterRequest, ApiResponse, SignInResponseData } from '@/types';
 
 interface AuthState {
   user: User | null;
   accessToken: string | null;
+  refreshToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
@@ -14,6 +17,9 @@ interface AuthState {
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   getAccessToken: () => string | null;
+  getRefreshToken: () => string | null;
+  setTokens: (accessToken: string, refreshToken: string | null) => void;
+  clearAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -21,6 +27,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       accessToken: null,
+      refreshToken: null,
       isLoading: false,
       isAuthenticated: false,
 
@@ -43,17 +50,43 @@ export const useAuthStore = create<AuthState>()(
           const { data } = response;
 
           if (data.code === '200' || data.code === 'OK') {
-            // 토큰 추출 - Authorization 헤더에서 (대소문자 모두 체크)
+            // Access Token 추출
+            // 1. 먼저 response body에서 확인
+            let accessTokenFromBody = data.data?.accessToken || null;
+
+            // 2. Authorization 헤더에서 확인 (대소문자 모두 체크)
             const authHeader =
               response.headers['authorization'] ||
               response.headers['Authorization'] ||
               response.headers['AUTHORIZATION'];
-            const headerToken = authHeader?.replace(/^Bearer\s+/i, '');
+            const headerToken = authHeader?.replace(/^Bearer\s+/i, '') || accessTokenFromBody;
+
+            // Refresh Token 추출
+            // 1. 먼저 response body에서 확인 (서버가 body에 포함하는 경우)
+            let refreshToken: string | null = data.data?.refreshToken || null;
+
+            // 2. Set-Cookie 헤더에서 확인 (fallback)
+            if (!refreshToken) {
+              const setCookieHeader = response.headers['set-cookie'];
+              console.log('Set-Cookie 헤더:', setCookieHeader);
+              if (setCookieHeader) {
+                const cookieString = Array.isArray(setCookieHeader) ? setCookieHeader.join('; ') : setCookieHeader;
+                const match = cookieString.match(/refreshToken=([^;]+)/);
+                if (match) {
+                  refreshToken = match[1];
+                }
+              }
+            }
+
+            // 3. 다른 커스텀 헤더에서 확인
+            if (!refreshToken) {
+              refreshToken = response.headers['x-refresh-token'] || response.headers['refresh-token'] || null;
+            }
 
             console.log('=== 토큰 추출 ===');
-            console.log('응답 헤더 전체:', JSON.stringify(response.headers, null, 2));
             console.log('Authorization 헤더:', authHeader);
-            console.log('추출된 토큰:', headerToken ? `있음 (${headerToken.substring(0, 30)}...)` : '없음');
+            console.log('Access Token:', headerToken ? `있음 (${headerToken.substring(0, 30)}...)` : '없음');
+            console.log('Refresh Token:', refreshToken ? `있음 (${refreshToken.substring(0, 30)}...)` : '없음');
 
             const accessToken = headerToken || null;
 
@@ -70,7 +103,7 @@ export const useAuthStore = create<AuthState>()(
               api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
             }
 
-            set({ user, accessToken, isAuthenticated: true, isLoading: false });
+            set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
           } else {
             throw new Error(data.message);
           }
@@ -114,7 +147,9 @@ export const useAuthStore = create<AuthState>()(
         } finally {
           // 토큰 제거
           delete api.defaults.headers.common['Authorization'];
-          set({ user: null, accessToken: null, isAuthenticated: false });
+          // React Query 캐시 초기화 (다른 계정 데이터 제거)
+          queryClient.clear();
+          set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
         }
       },
 
@@ -125,6 +160,20 @@ export const useAuthStore = create<AuthState>()(
       getAccessToken: () => {
         return get().accessToken;
       },
+
+      getRefreshToken: () => {
+        return get().refreshToken;
+      },
+
+      setTokens: (accessToken, refreshToken) => {
+        api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        set({ accessToken, refreshToken: refreshToken ?? get().refreshToken });
+      },
+
+      clearAuth: () => {
+        delete api.defaults.headers.common['Authorization'];
+        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+      },
     }),
     {
       name: 'auth-storage',
@@ -132,6 +181,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
@@ -143,4 +193,27 @@ export const useAuthStore = create<AuthState>()(
       },
     }
   )
+);
+
+// API 인터셉터에서 토큰 변경 시 스토어 동기화
+registerTokenCallbacks(
+  // 토큰 업데이트 콜백
+  (accessToken, refreshToken) => {
+    useAuthStore.setState({
+      accessToken,
+      refreshToken: refreshToken ?? useAuthStore.getState().refreshToken,
+    });
+    console.log('[AuthStore] 토큰 동기화됨');
+  },
+  // 인증 초기화 콜백
+  () => {
+    queryClient.clear();
+    useAuthStore.setState({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+      isAuthenticated: false,
+    });
+    console.log('[AuthStore] 인증 초기화됨');
+  }
 );
