@@ -11,7 +11,7 @@ import Footer from '@/navigation/Footer';
 import { SideMenu } from '@/components/SideMenu';
 
 // 헤더를 숨길 페이지들
-const HIDE_HEADER_ROUTES = ['login', 'register', 'index', 'add-farm'];
+const HIDE_HEADER_ROUTES = ['login', 'register', 'index', 'add-farm', 'report', 'report-result', 'bee-diagnosis', 'diagnose-history'];
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_EDGE_WIDTH = 30; // 스와이프 감지 영역 너비
@@ -35,6 +35,9 @@ export default function RootLayout() {
         break;
       case 'diagnosis':
         router.push('/diagnose');
+        break;
+      case 'bee-diagnosis':
+        router.push('/bee-diagnosis');
         break;
       case 'recommend':
         router.push('/recommend');
@@ -86,7 +89,7 @@ export default function RootLayout() {
         <View style={{ flex: 1, backgroundColor: '#000' }}>
           {/* 메인 콘텐츠 */}
           <Animated.View style={[{ flex: 1, backgroundColor: '#fff' }, animatedStyle]}>
-            <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+            <SafeAreaView className="flex-1 bg-white" edges={showHeader ? ['top'] : []}>
               <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
               {showHeader && (
                 <Header

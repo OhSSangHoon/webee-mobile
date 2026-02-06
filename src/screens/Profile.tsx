@@ -72,7 +72,7 @@ export default function Profile() {
           </View>
           <View className="flex-1">
             <Text className="text-lg font-semibold text-gray-900">{userName}님</Text>
-            <Text className="text-sm text-gray-500 mt-0.5">프로필 관리</Text>
+            <Text className="text-sm text-gray-600 mt-0.5">프로필 관리</Text>
           </View>
           <Feather name="chevron-right" size={18} color="#C7C7CC" />
         </Pressable>
@@ -80,7 +80,7 @@ export default function Profile() {
 
       {/* 내 농지 섹션 */}
       <View className="mb-4">
-        <Text className="text-xs font-semibold text-gray-500 mb-2 px-5">내 농지</Text>
+        <Text className="text-xs font-semibold text-gray-600 mb-2 px-5">내 농지</Text>
         <View className="mx-4 bg-white rounded-2xl overflow-hidden">
           <Pressable
             className="flex-row items-center p-4 active:bg-gray-50"
@@ -91,7 +91,7 @@ export default function Profile() {
             </View>
             <View className="flex-1">
               <Text className="text-base font-semibold text-gray-900">농지 추가하기</Text>
-              <Text className="text-sm text-gray-500 mt-0.5">
+              <Text className="text-sm text-gray-600 mt-0.5">
                 농지를 등록하고 맞춤 서비스를 이용해보세요
               </Text>
             </View>
@@ -102,7 +102,7 @@ export default function Profile() {
 
       {/* 설정 섹션 */}
       <View className="mb-4">
-        <Text className="text-xs font-semibold text-gray-500 mb-2 px-5">설정</Text>
+        <Text className="text-xs font-semibold text-gray-600 mb-2 px-5">설정</Text>
         <View className="mx-4 bg-white rounded-2xl overflow-hidden">
           <MenuItem
             icon="bell"
@@ -124,7 +124,7 @@ export default function Profile() {
             onPress={() => {}}
             rightElement={
               <View className="flex-row items-center gap-1">
-                <Text className="text-base text-gray-500">한국어</Text>
+                <Text className="text-base text-gray-600">한국어</Text>
                 <Feather name="chevron-right" size={18} color="#C7C7CC" />
               </View>
             }
@@ -140,7 +140,7 @@ export default function Profile() {
 
       {/* 계정 섹션 */}
       <View className="mb-4">
-        <Text className="text-xs font-semibold text-gray-500 mb-2 px-5">계정</Text>
+        <Text className="text-xs font-semibold text-gray-600 mb-2 px-5">계정</Text>
         <View className="mx-4 bg-white rounded-2xl overflow-hidden">
           <MenuItem icon="log-out" label="로그아웃" onPress={handleLogout} />
           <View className="h-px bg-gray-100 ml-11" />
@@ -150,7 +150,7 @@ export default function Profile() {
 
       {/* 버전 정보 */}
       <View className="items-center py-4 mb-8">
-        <Text className="text-sm text-gray-400">버전 1.0.0</Text>
+        <Text className="text-sm text-gray-600">버전 1.0.0</Text>
       </View>
     </ScrollView>
   );

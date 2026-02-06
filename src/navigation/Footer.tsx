@@ -10,9 +10,9 @@ interface FooterTab {
 }
 
 const TABS: FooterTab[] = [
-  { id: "home", label: "홈", icon: "home", route: "/home" },
-  { id: "diagnose", label: "진단", icon: "search", route: "/diagnose" },
+  { id: "bee-diagnosis", label: "진단", icon: "activity", route: "/bee-diagnosis" },
   { id: "recommend", label: "추천", icon: "thumbs-up", route: "/recommend" },
+  { id: "home", label: "홈", icon: "home", route: "/home" },
   { id: "market", label: "장터", icon: "shopping-bag", route: "/market" },
   { id: "profile", label: "마이", icon: "user", route: "/profile" },
 ];
@@ -41,7 +41,7 @@ export default function Footer() {
             />
             <Text
               className={`text-xs mt-1 ${
-                isActive ? "text-yellow-500 font-semibold" : "text-gray-400"
+                isActive ? "text-yellow-500 font-semibold" : "text-gray-500"
               }`}
             >
               {tab.label}

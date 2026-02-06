@@ -1,5 +1,11 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
+import {
+  getStoredRefreshToken,
+  updateStoredTokens,
+  clearAuthStorage,
+} from './storage';
+import { notifyTokensUpdated, notifyAuthCleared } from './tokenManager';
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://api.webee.sbs';
 
@@ -34,30 +40,89 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // reissue 요청 자체가 실패하면 무한 루프 방지
+    const isReissueRequest = originalRequest.url?.includes('/auth/reissue');
+    if (isReissueRequest) {
+      console.log('[API] reissue 요청 실패 - 재로그인 필요');
+      await clearAuthStorage();
+      delete api.defaults.headers.common['Authorization'];
+      notifyAuthCleared();
+      return Promise.reject(error);
+    }
+
     // 401 에러이고 재시도하지 않은 경우 토큰 갱신 시도
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        console.log('[API] 토큰 갱신 시도...');
-        const refreshResponse = await api.post('/api/v1/auth/reissue');
+        // 저장된 refresh token 가져오기
+        const refreshToken = await getStoredRefreshToken();
+        if (!refreshToken) {
+          console.log('[API] refresh token 없음 - 재로그인 필요');
+          await clearAuthStorage();
+          delete api.defaults.headers.common['Authorization'];
+          notifyAuthCleared();
+          return Promise.reject(error);
+        }
 
-        // 새 토큰 추출 - Authorization 헤더에서
-        const authHeader =
-          refreshResponse.headers['authorization'] ||
-          refreshResponse.headers['Authorization'] ||
-          refreshResponse.headers['AUTHORIZATION'];
-        const newToken = authHeader?.replace(/^Bearer\s+/i, '');
+        console.log('[API] 토큰 갱신 시도...', refreshToken.substring(0, 30) + '...');
 
-        if (newToken) {
-          api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-          originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        // fetch를 사용하여 쿠키와 함께 reissue 요청
+        const refreshResponse = await fetch(`${API_URL}/api/v1/auth/reissue`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cookie': `refreshToken=${refreshToken}`,
+          },
+          credentials: 'include',
+        });
+
+        const refreshData = await refreshResponse.json();
+        console.log('[API] reissue 응답 status:', refreshResponse.status);
+        console.log('[API] reissue 응답 headers:', JSON.stringify(Object.fromEntries(refreshResponse.headers.entries())));
+
+        if (!refreshResponse.ok) {
+          throw new Error(`Reissue failed: ${refreshResponse.status}`);
+        }
+
+        // 새 access token 추출 (fetch 응답에서)
+        const authHeader = refreshResponse.headers.get('authorization') ||
+                          refreshResponse.headers.get('Authorization');
+        const newAccessToken = authHeader?.replace(/^Bearer\s+/i, '');
+
+        // 새 refresh token 추출 (Set-Cookie에서)
+        const setCookieHeader = refreshResponse.headers.get('set-cookie');
+        let newRefreshToken: string | null = null;
+        if (setCookieHeader) {
+          const match = setCookieHeader.match(/refreshToken=([^;]+)/);
+          if (match) {
+            newRefreshToken = match[1];
+          }
+        }
+
+        console.log('[API] 새 access token:', newAccessToken ? '있음' : '없음');
+        console.log('[API] 새 refresh token:', newRefreshToken ? '있음' : '없음');
+
+        if (newAccessToken) {
+          // 토큰 업데이트
+          api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+          originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+
+          // AsyncStorage에 저장
+          await updateStoredTokens(newAccessToken, newRefreshToken);
+
+          // Zustand 스토어 동기화
+          notifyTokensUpdated(newAccessToken, newRefreshToken);
+
           console.log('[API] 토큰 갱신 성공');
           return api(originalRequest);
         }
       } catch (refreshError) {
         console.log('[API] 토큰 갱신 실패 - 재로그인 필요');
-        // 토큰 갱신 실패 시 로그아웃 처리는 앱에서 처리
+        await clearAuthStorage();
+        delete api.defaults.headers.common['Authorization'];
+        notifyAuthCleared();
+        return Promise.reject(refreshError);
       }
     }
 
