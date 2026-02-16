@@ -108,16 +108,16 @@ export default function BeeNewsScreen() {
       <Pressable
         onPress={() => handleOpenLink(item.link)}
         data-testid={`button-news-${index}`}
-        className="bg-white rounded-xl p-4 flex-row items-center gap-2"
+        className="bg-white rounded-xl p-4 flex-row items-center gap-5"
       >
-        <View className="flex-1 gap-4">
-          <Text className="text-base font-semibold text-gray-900 leading-6">
+        <View className="flex-1 gap-3">
+          <Text className="text-lg font-semibold text-gray-900 leading-6">
             {item.title}
           </Text>
           <View className="flex-row items-center gap-2">
             {item.source ? (
               <View className="bg-yellow-50 px-2 py-0.5 rounded-md">
-                <Text className="text-xs font-semibold text-yellow-600">
+                <Text className="text-sm font-semibold text-yellow-600">
                   {item.source}
                 </Text>
               </View>
@@ -272,7 +272,7 @@ export default function BeeNewsScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             padding: 16,
-            gap: 10,
+            gap: 1,
             paddingBottom: insets.bottom + 20,
           }}
           ListHeaderComponent={
@@ -282,10 +282,10 @@ export default function BeeNewsScreen() {
             >
               <Feather
                 name="file-text"
-                size={16}
+                size={15}
                 color={TossColors.primaryLight}
               />
-              <Text className="text-sm font-semibold text-gray-900">
+              <Text className="text-base font-semibold text-gray-900">
                 '{selectedKeyword}' 관련 최신 뉴스
               </Text>
             </Animated.View>
