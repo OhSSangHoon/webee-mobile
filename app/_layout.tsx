@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StatusBar, View, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Slot, useRouter, useSegments } from 'expo-router';
@@ -9,9 +9,12 @@ import { Providers } from '@/providers';
 import Header from '@/navigation/Header';
 import Footer from '@/navigation/Footer';
 import { SideMenu } from '@/components/SideMenu';
+import { useAuthStore } from '@/stores/useAuthStore';
 
 // 헤더를 숨길 페이지들
 const HIDE_HEADER_ROUTES = ['login', 'register', 'index', 'add-farm', 'report', 'report-result', 'bee-diagnosis', 'diagnose-history'];
+// 인증 없이 접근 가능한 페이지들
+const PUBLIC_ROUTES = ['login', 'register', 'index'];
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_EDGE_WIDTH = 30; // 스와이프 감지 영역 너비
@@ -22,10 +25,20 @@ export default function RootLayout() {
   const segments = useSegments();
   const translateX = useSharedValue(0);
   const [menuVisible, setMenuVisible] = useState(false);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // 현재 라우트가 헤더를 숨겨야 하는 페이지인지 확인
   const currentRoute = segments[0] || 'index';
   const showHeader = !HIDE_HEADER_ROUTES.includes(currentRoute);
+
+  // 인증 가드: 로그아웃 시 로그인 화면으로 리다이렉트
+  useEffect(() => {
+    const isPublicRoute = PUBLIC_ROUTES.includes(currentRoute);
+
+    if (!isAuthenticated && !isPublicRoute) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, currentRoute]);
 
   const handleMenuPress = (menuId: string) => {
     setMenuVisible(false);

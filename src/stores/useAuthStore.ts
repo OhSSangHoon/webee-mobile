@@ -215,5 +215,7 @@ registerTokenCallbacks(
       isAuthenticated: false,
     });
     console.log('[AuthStore] 인증 초기화됨');
-  }
+  },
+  // refreshToken 조회 콜백 (Zustand 메모리에서 직접 읽기)
+  () => useAuthStore.getState().refreshToken
 );
