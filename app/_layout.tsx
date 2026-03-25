@@ -1,19 +1,37 @@
-import { useState } from 'react';
-import { StatusBar, View, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import '../global.css';
-import { Providers } from '@/providers';
-import Header from '@/navigation/Header';
-import Footer from '@/navigation/Footer';
-import { SideMenu } from '@/components/SideMenu';
+import { useState } from "react";
+import { StatusBar, View, Dimensions } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Slot, useRouter, useSegments } from "expo-router";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import "../global.css";
+import { Providers } from "@/providers";
+import Header from "@/navigation/Header";
+import Footer from "@/navigation/Footer";
+import { SideMenu } from "@/components/SideMenu";
 
 // 헤더를 숨길 페이지들
-const HIDE_HEADER_ROUTES = ['login', 'register', 'index', 'add-farm', 'report', 'report-result', 'bee-diagnosis', 'diagnose-history'];
+const HIDE_HEADER_ROUTES = [
+  "login",
+  "register",
+  "index",
+  "add-farm",
+  "report",
+  "report-result",
+  "bee-diagnosis",
+  "diagnose-history",
+];
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const SWIPE_EDGE_WIDTH = 30; // 스와이프 감지 영역 너비
 const SWIPE_THRESHOLD = 80; // 뒤로가기 트리거 거리
 
@@ -24,32 +42,35 @@ export default function RootLayout() {
   const [menuVisible, setMenuVisible] = useState(false);
 
   // 현재 라우트가 헤더를 숨겨야 하는 페이지인지 확인
-  const currentRoute = segments[0] || 'index';
+  const currentRoute = segments[0] || "index";
   const showHeader = !HIDE_HEADER_ROUTES.includes(currentRoute);
 
   const handleMenuPress = (menuId: string) => {
     setMenuVisible(false);
     switch (menuId) {
-      case 'home':
-        router.push('/home');
+      case "home":
+        router.push("/home");
         break;
-      case 'diagnosis':
-        router.push('/diagnose');
+      case "diagnosis":
+        router.push("/diagnose");
         break;
-      case 'bee-diagnosis':
-        router.push('/bee-diagnosis');
+      case "bee-diagnosis":
+        router.push("/bee-diagnosis");
         break;
-      case 'recommend':
-        router.push('/recommend');
+      case "recommend":
+        router.push("/recommend");
         break;
-      case 'market':
-        router.push('/market');
+      case "market":
+        router.push("/market");
         break;
-      case 'profile':
-        router.push('/profile');
+      case "profile":
+        router.push("/profile");
+        break;
+      case "bee-news":
+        router.push("/bee-news");
         break;
       default:
-        console.log('Menu pressed:', menuId);
+        console.log("Menu pressed:", menuId);
     }
   };
 
@@ -86,15 +107,22 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Providers>
-        <View style={{ flex: 1, backgroundColor: '#000' }}>
+        <View style={{ flex: 1, backgroundColor: "#000" }}>
           {/* 메인 콘텐츠 */}
-          <Animated.View style={[{ flex: 1, backgroundColor: '#fff' }, animatedStyle]}>
-            <SafeAreaView className="flex-1 bg-white" edges={showHeader ? ['top'] : []}>
+          <Animated.View
+            style={[{ flex: 1, backgroundColor: "#fff" }, animatedStyle]}
+          >
+            <SafeAreaView
+              className="flex-1 bg-white"
+              edges={showHeader ? ["top"] : []}
+            >
               <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
               {showHeader && (
                 <Header
                   onMenuPress={() => setMenuVisible(true)}
-                  onNotificationPress={() => console.log('Notification pressed')}
+                  onNotificationPress={() =>
+                    console.log("Notification pressed")
+                  }
                 />
               )}
               <View style={{ flex: 1 }}>
@@ -115,12 +143,12 @@ export default function RootLayout() {
           <GestureDetector gesture={edgeSwipeGesture}>
             <Animated.View
               style={{
-                position: 'absolute',
+                position: "absolute",
                 left: 0,
                 top: 0,
                 bottom: 0,
                 width: SWIPE_EDGE_WIDTH,
-                backgroundColor: 'transparent',
+                backgroundColor: "transparent",
               }}
             />
           </GestureDetector>

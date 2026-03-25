@@ -228,6 +228,23 @@ export default function Home() {
           </Pressable>
         </View>
 
+        {/* 4-1. 스마트벌통 관리 이동 링크 */}
+        <View className="px-4 mb-6">
+          <Pressable
+            onPress={() => router.push('/hive-control')}
+            className="bg-white rounded-2xl p-4 flex-row items-center active:scale-[0.98]"
+          >
+            <View className="w-13 h-13 rounded-xl bg-green-50 items-center justify-center mr-3">
+              <Feather name="zap" size={24} color="#10B981" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-semibold text-gray-900">스마트벌통 관리</Text>
+              <Text className="text-sm text-gray-600 mt-0.5">실시간 벌통 상태 확인·제어</Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="#C7C7CC" />
+          </Pressable>
+        </View>
+
         {/* 5. 수정벌 뉴스 캐러셀 */}
         <NewsCarousel keyword="수정벌" title="수정벌 뉴스" />
       </ScrollView>

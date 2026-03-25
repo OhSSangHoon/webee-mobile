@@ -8,3 +8,7 @@ export * from './weather';
 export * from './news';
 export * from './report';
 export * from './farm';
+export * from './hive-control';
+export * from './hive-settings';
+export * from './hive-status';
+
