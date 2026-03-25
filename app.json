@@ -28,7 +28,8 @@
       "favicon": "./assets/branding/webee_logo.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "WEATHER_API_KEY": "af3abab5447ba09c9b99af1252e0808e",
