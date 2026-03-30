@@ -75,6 +75,9 @@ export default function RootLayout() {
       case "fruit-price":
         router.push("/fruit-price");
         break;
+      case "bee-chat":
+        router.push("/bee-chat");
+        break;
       case "trade": // ← 이거 없음
         router.push("/trade");
         break;

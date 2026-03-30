@@ -22,6 +22,7 @@ const menuItems: MenuItem[] = [
   { id: "bee-diagnosis", title: "꿀벌 질병 진단", icon: "activity" },
   { id: "recommend", title: "수정벌 추천", icon: "thumbs-up" },
   { id: "bee-news", title: "수정벌 뉴스", icon: "file-text" },
+  { id: "bee-chat", title: "채팅 및 문의", icon: "dribbble" },
   { id: "pesticide", title: "맞춤 농약", icon: "droplet" },
   { id: "trade", title: "거래 연결", icon: "users" },
 ];
