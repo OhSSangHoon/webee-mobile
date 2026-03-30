@@ -14,6 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
+import Pagination from "@/components/pagination";
 
 const KEYWORDS = [
   { label: "수정벌", value: "수정벌" },
@@ -138,64 +139,6 @@ export default function BeeNewsScreen() {
 
   const totalPages = Math.max(1, Math.ceil(news.length / PAGE_SIZE));
 
-  const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const pages: number[] = [];
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-
-    return (
-      <View className="flex-row items-center justify-center gap-1 py-2">
-        <Pressable
-          onPress={() => currentPage > 1 && handlePageChange(currentPage - 1)}
-          disabled={currentPage <= 1}
-          data-testid="button-page-prev"
-          className={`w-9 h-9 items-center justify-center rounded-lg ${currentPage <= 1 ? "opacity-40" : ""}`}
-        >
-          <Feather
-            name="chevron-left"
-            size={20}
-            color={currentPage <= 1 ? TossColors.textTertiary : TossColors.text}
-          />
-        </Pressable>
-
-        {pages.map((p) => (
-          <Pressable
-            key={p}
-            onPress={() => handlePageChange(p)}
-            data-testid={`button-page-${p}`}
-            className={`w-9 h-9 items-center justify-center rounded-lg ${p === currentPage ? "bg-yellow-300" : ""}`}
-          >
-            <Text
-              className={`text-sm ${p === currentPage ? "text-gray-900 font-bold" : "text-gray-500 font-medium"}`}
-            >
-              {p}
-            </Text>
-          </Pressable>
-        ))}
-
-        <Pressable
-          onPress={() =>
-            currentPage < totalPages && handlePageChange(currentPage + 1)
-          }
-          disabled={currentPage >= totalPages}
-          data-testid="button-page-next"
-          className={`w-9 h-9 items-center justify-center rounded-lg ${currentPage >= totalPages ? "opacity-40" : ""}`}
-        >
-          <Feather
-            name="chevron-right"
-            size={20}
-            color={
-              currentPage >= totalPages
-                ? TossColors.textTertiary
-                : TossColors.text
-            }
-          />
-        </Pressable>
-      </View>
-    );
-  };
-
   return (
     <View className="flex-1 bg-gray-100">
       <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
@@ -290,7 +233,13 @@ export default function BeeNewsScreen() {
               </Text>
             </Animated.View>
           }
-          ListFooterComponent={renderPagination}
+          ListFooterComponent={
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              onPage={handlePageChange}
+            />
+          }
         />
       )}
     </View>

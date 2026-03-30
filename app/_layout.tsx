@@ -69,6 +69,15 @@ export default function RootLayout() {
       case "bee-news":
         router.push("/bee-news");
         break;
+      case "pesticide":
+        router.push("/pesticide");
+        break;
+      case "fruit-price":
+        router.push("/fruit-price");
+        break;
+      case "trade": // ← 이거 없음
+        router.push("/trade");
+        break;
       default:
         console.log("Menu pressed:", menuId);
     }
