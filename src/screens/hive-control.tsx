@@ -199,7 +199,7 @@ export default function HiveControlScreen() {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
-    (navigation as any).navigate("HiveStats");
+    (navigation as any).navigate("hive-stats");
   };
 
   const hapticLight = () => {
@@ -259,7 +259,9 @@ export default function HiveControlScreen() {
         >
           <Feather name="chevron-left" size={24} color={C.text} />
         </Pressable>
-              <Text className="text-lg font-semibold text-toss-text">스마트벌통 관리</Text>
+        <Text className="text-lg font-semibold text-toss-text">
+          스마트벌통 관리
+        </Text>
         <Pressable
           onPress={handleSettings}
           className="w-10 h-10 items-center justify-center"
@@ -313,6 +315,7 @@ export default function HiveControlScreen() {
                 <Feather name="bar-chart-2" size={14} color="#FFFFFF" />
                 <Text
                   style={{ fontSize: 13, fontWeight: "600", color: "#FFFFFF" }}
+                  onPress={handleStatsPress}
                 >
                   통계 보기
                 </Text>

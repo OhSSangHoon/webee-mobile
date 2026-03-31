@@ -81,6 +81,15 @@ export default function RootLayout() {
       case "trade": // ← 이거 없음
         router.push("/trade");
         break;
+        case "hive-status": 
+        router.push("/hive-stats");
+        break;
+         case "hive-setting": 
+        router.push("/hive-setting");
+        break;
+         case "hive-control": 
+        router.push("/hive-control");
+        break;
       default:
         console.log("Menu pressed:", menuId);
     }
