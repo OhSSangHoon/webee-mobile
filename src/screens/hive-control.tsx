@@ -10,6 +10,8 @@ import { ControlItem } from "@/features/hive-control/UI/controlItem";
 import { HiveBeeBoxCard } from "@/features/hive-control/UI/hiveBeeBoxCard";
 import { QcToggleButton } from "@/features/hive-control/UI/qctoggleButton";
 import { HiveDropdown } from "@/features/hive-control/UI/dropdown";
+import AppHeader from "@/components/AppHeader";
+import { router } from "expo-router";
 
 interface HiveData {
   id: string;
@@ -141,13 +143,6 @@ export default function HiveControlScreen() {
   const { heaterDisabled, coolerDisabled, ventDisabled, circDisabled } =
     getDisabledState(currentQc.controls);
 
-  const handleGoBack = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    navigation.goBack();
-  };
-
   const handleToggleControl = (id: string) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -250,26 +245,17 @@ export default function HiveControlScreen() {
   return (
     <View className="flex-1 bg-gray-100">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white ">
-        <Pressable
-          onPress={handleGoBack}
-          className="w-10 h-10 items-center justify-center"
-          style={{ marginLeft: -8 }}
-          data-testid="button-back"
-        >
-          <Feather name="chevron-left" size={24} color={C.text} />
-        </Pressable>
-        <Text className="text-lg font-semibold text-toss-text">
-          스마트벌통 관리
-        </Text>
-        <Pressable
-          onPress={handleSettings}
-          className="w-10 h-10 items-center justify-center"
-          data-testid="button-settings"
-        >
-          <Feather name="settings" size={20} color={C.text} />
-        </Pressable>
-      </View>
+
+      <AppHeader
+        title="내 농장"
+        onBack={() => router.back()}
+        rightAction={{
+          icon: "settings",
+          color: "#191F28",
+          onPress: handleSettings,
+          testId: "button-settings",
+        }}
+      />
 
       <ScrollView
         className="flex-1"

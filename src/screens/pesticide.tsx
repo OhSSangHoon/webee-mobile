@@ -16,6 +16,10 @@ import { usePesticideStore } from "@/features/pesticide";
 import type { ResultItem } from "@/features/pesticide";
 import Pagination from "@/components/pagination";
 import { COLS } from "@/constants";
+import AppHeader from "@/components/AppHeader";
+import { useRouter } from "expo-router";
+
+
 
 // ── 행 ────────────────────────────────────────────────────────────────────────
 const ResultRow = memo(
@@ -53,6 +57,8 @@ export default function PesticideTable() {
     setPage,
   } = usePesticideStore();
 
+  const router = useRouter();
+
   const { isError: codesError, refetch: refetchCodes } = useCodeOptions();
   const {
     items,
@@ -65,13 +71,12 @@ export default function PesticideTable() {
 
   const handlePage = useCallback((p: number) => setPage(p), []);
 
+
   return (
     <View className="flex-1 bg-slate-50">
       {/* 헤더 */}
+      <AppHeader title="내 작물에 맞는 농약 찾기" onBack={() => router.back()} />
       <View className="px-4 pt-5 pb-3 bg-white border-b border-slate-100">
-        <Text className="text-xl font-extrabold text-slate-800">
-          내 작물에 맞는 농약 찾기
-        </Text>
         <Text className="text-xs text-slate-400 mt-1">
           작물, 용도, 곤충을 선택하면 농약 적용 정보를 확인할 수 있습니다.
         </Text>
@@ -113,9 +118,9 @@ export default function PesticideTable() {
               key={label}
               className="flex-auto bg-white border border-slate-200 rounded-lg overflow-hidden"
             >
-                <Text className="text-xs font-bold text-slate-500 px-2 pt-1">
-                  {label}
-                </Text>
+              <Text className="text-xs font-bold text-slate-500 px-2 pt-1">
+                {label}
+              </Text>
               <Picker
                 selectedValue={value}
                 onValueChange={(v) => set(v as string)}

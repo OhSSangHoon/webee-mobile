@@ -39,6 +39,7 @@ const TossColors = {
 import { NewsItem } from "@/types/news";
 import { useNews } from "@/features";
 import { formatDateKorean } from "@/lib/utils";
+import AppHeader from "@/components/AppHeader";
 
 // 한 화면에 5개씩 표시 — 최대 5페이지(최대 25개 항목 기준)
 const PAGE_SIZE = 5;
@@ -141,18 +142,7 @@ export default function BeeNewsScreen() {
 
   return (
     <View className="flex-1 bg-gray-100">
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-        <Pressable
-          onPress={handleGoBack}
-          className="w-10 h-10 items-center justify-center -ml-2"
-          data-testid="button-back"
-        >
-          <Feather name="chevron-left" size={24} color={TossColors.text} />
-        </Pressable>
-        <Text className="text-lg font-semibold text-gray-900">벌 뉴스</Text>
-        <View className="w-10" />
-      </View>
-
+      <AppHeader title="새 소식" onBack={() => navigation.goBack()} />
       <View className="bg-white py-2.5 border-b border-gray-200">
         <ScrollView
           horizontal

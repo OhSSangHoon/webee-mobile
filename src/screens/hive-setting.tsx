@@ -12,10 +12,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { KMA_REGIONS, DATA_INTERVALS } from "@/types";
 import { BeeBoxCard } from "@/components/BeeboxCard";
+import AppHeader from "@/components/AppHeader";
+import { router } from "expo-router";
 
 export const WEATHER_REGION_KEY = "webee_weather_region";
 export const DATA_INTERVAL_KEY = "webee_data_interval";
@@ -36,7 +37,6 @@ export interface WeatherRegion {
 
 export default function HiveSettingsScreen() {
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
   const [selectedStn, setSelectedStn] = useState<number>(108);
   const [searchText, setSearchText] = useState("");
   const [savedMessage, setSavedMessage] = useState(false);
@@ -104,29 +104,12 @@ export default function HiveSettingsScreen() {
     setTimeout(() => setSavedMessage(false), 2000);
   };
 
-  const handleGoBack = () => {
-    haptic();
-    navigation.goBack();
-  };
-
   const selectedRegionName =
     KMA_REGIONS.find((r) => r.stn === selectedStn)?.name || "서울";
 
   return (
     <View className="flex-1 bg-gray-100">
-      <View className="flex-row items-center justify-between border-b border-toss-border bg-white px-5 py-2">
-        <Pressable
-          onPress={handleGoBack}
-          className="-ml-2 h-10 w-10 items-center justify-center"
-          data-testid="button-back"
-        >
-          <Feather name="chevron-left" size={24} color="#191F28" />
-        </Pressable>
-        <Text className="text-lg font-semibold text-toss-text">설정</Text>
-    
-        <View className="w-10" />
-      </View>
-
+      <AppHeader title="설정" onBack={() => router.back()} />
       <ScrollView
         className="flex-1"
         contentContainerStyle={{

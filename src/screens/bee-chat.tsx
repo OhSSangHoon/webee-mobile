@@ -17,6 +17,7 @@ import { useNavigation } from "@react-navigation/native";
 
 import InquiryModal from "./bee-chat-inquiry";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AppHeader from "@/components/AppHeader";
 
 // ── 색상 팔레트 ──────────────────────────────────────
 const C = {
@@ -148,50 +149,18 @@ export default function BeeChatScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-[#F4F5F7]"
-      style={{ paddingTop: insets.top }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <KeyboardAvoidingView className="flex-1 bg-[#F4F5F7]">
       {/* ── 헤더 ── */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-[#E5E8EB]">
-        <Pressable
-          onPress={handleGoBack}
-          className="w-10 h-10 items-center justify-center"
-          style={{ marginLeft: -8 }}
-          data-testid="button-back-chat"
-        >
-          <Feather name="chevron-left" size={24} color={C.Text} />
-        </Pressable>
-
-        <View className="flex-row items-center gap-2">
-          <View
-            className="items-center justify-center"
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 14,
-              backgroundColor: C.bee,
-            }}
-          >
-            <Text style={{ fontSize: 14 }}>🐝</Text>
-          </View>
-          <Text style={{ fontSize: 18, fontWeight: "600", color: C.Text }}>
-            수정벌 챗봇
-          </Text>
-        </View>
-
-        <Pressable
-          onPress={() => setInquiryVisible(true)}
-          className="w-10 h-10 items-center justify-center"
-          style={{ marginRight: -8 }}
-          data-testid="button-inquiry"
-        >
-          <Feather name="mail" size={22} color={C.primary} />
-        </Pressable>
-      </View>
-
-      {/* ── 메시지 목록 ── */}
+      <AppHeader
+        title="채팅 및 문의"
+        onBack={() => navigation.goBack()}
+        rightAction={{
+          icon: "mail",
+          onPress: () => setInquiryVisible(true),
+          testId: "button-inquiry",
+        }}
+      />
+      // 설정 버튼 있는 화면
       <ScrollView
         ref={scrollRef}
         className="flex-1"
@@ -317,7 +286,6 @@ export default function BeeChatScreen() {
           </Animated.View>
         )}
       </ScrollView>
-
       {/* ── 입력창 ── */}
       <View
         className="bg-white border-t border-[#E5E8EB]"
@@ -371,7 +339,6 @@ export default function BeeChatScreen() {
           </Pressable>
         </View>
       </View>
-
       {/* ── 문의 모달 ── */}
       <InquiryModal
         visible={inquiryVisible}
