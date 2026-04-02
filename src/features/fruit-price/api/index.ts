@@ -2,10 +2,8 @@ import axios from "axios";
 import type { Row } from "@/types";
 import qs from "qs";
 
-export const BASE_URL = "https://apis.data.go.kr/B552845/katRealTime2/trades2";
-export const SERVICE_KEY =
-  "xNPW3bBwt8j3dOB9niigELSJ6hRgpxaeIun8XdyUN93/DJTyc+vpMpAcoCjcesOF96l0wsLx65PrA9fHgZYzMQ==";
-//추후 환경변수로 변경~~
+export const BASE_URL = process.env.EXPO_PUBLIC_BASE_URL!;
+export const SERVICE_KEY = process.env.EXPO_PUBLIC_SERVICE_KEY!;
 
 export function parseRows(data: any): { rows: Row[]; totalCount: number } {
   const resultCode = data?.response?.header?.resultCode;

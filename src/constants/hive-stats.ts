@@ -29,7 +29,7 @@ export const Spacing = {
 } as const;
 
 export const WEATHER_REGION_KEY = "webee_weather_region";
-export const KMA_API_KEY = "0U6eghd-Sc2OnoIXfgnN5A";
+export const KMA_API_KEY = process.env.EXPO_PUBLIC_KMA_API_KEY!;
 export const PERIODS = ["일간", "주간", "월간"] as const; //날씨 확인 
 
 export const DATA_INTERVALS = [

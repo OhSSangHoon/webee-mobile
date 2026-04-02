@@ -26,7 +26,8 @@ yarn-debug.*
 yarn-error.*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env
+#expo 환경서 env.local 파일 인식불가
 
 # vercel
 .vercel
