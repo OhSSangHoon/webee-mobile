@@ -27,8 +27,6 @@ const HIDE_HEADER_ROUTES = [
   "add-farm",
   "report",
   "report-result",
-  "bee-diagnosis",
-  "diagnose-history",
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -81,13 +79,13 @@ export default function RootLayout() {
       case "trade": // ← 이거 없음
         router.push("/trade");
         break;
-        case "hive-status": 
+      case "hive-status":
         router.push("/hive-stats");
         break;
-         case "hive-setting": 
+      case "hive-setting":
         router.push("/hive-setting");
         break;
-         case "hive-control": 
+      case "hive-control":
         router.push("/hive-control");
         break;
       default:
