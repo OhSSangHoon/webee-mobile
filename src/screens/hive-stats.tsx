@@ -18,7 +18,7 @@ import {
   PeriodCard,
   ChartCards,
   DataTable,
-} from "../components/hive-stats";
+} from "@/features/hive-status";
 import { WeatherSection } from "../components/hive-weather";
 import {
   useWeatherRegion,
