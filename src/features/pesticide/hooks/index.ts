@@ -17,8 +17,8 @@ import axios from "axios";
 import { parseOptions, parseResults } from "./utils";
 import { usePesticideStore } from "./store";
 
-const BASE = "http://api.nongsaro.go.kr/service/insectAgchApplc";
-const API_KEY = "20260323S2BDYXFPQAHILMKR22ETGG";
+const BASE = process.env.EXPO_PUBLIC_NONGSARO_BASE_URL!;
+const API_KEY = process.env.EXPO_PUBLIC_NONGSARO_API_KEY!;
 const ROWS_PER_PAGE = 15;
 const MAX_RETRY = 3;
 const RETRY_DELAY_MS = 2000;

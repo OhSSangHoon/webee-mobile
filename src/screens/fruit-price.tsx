@@ -1,7 +1,6 @@
 /*드롭다운, 모달, 테이블 확대 기능, 테이블, 페이지네이션 순으로 작성한 도매시장 시세 UI. 데이터는 useTradeStore에서 관리.*/
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "expo-router";
-import { Feather } from "@expo/vector-icons";
 import {
   View,
   Text,
@@ -39,6 +38,7 @@ import {
   getTodayKST,
 } from "@/constants";
 import Pagination from "@/components/pagination";
+import AppHeader from "@/components/AppHeader";
 
 const NUM_OF_ROWS = 30;
 const BASE_FONT = 13; //시세 결과 테이블 기본 글자 크기
@@ -390,19 +390,7 @@ export default function ApiTestScreen() {
     <GestureHandlerRootView className="flex-1">
       <View className="flex-1 bg-slate-50">
         {/* 헤더 */}
-        <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-          <Pressable
-            onPress={() => router.back()}
-            className="w-10 h-10 items-center justify-center -ml-2"
-          >
-            <Feather name="chevron-left" size={24} color="#111827" />
-          </Pressable>
-          <Text className="text-lg font-semibold text-gray-900">
-            수정벌 추천
-          </Text>
-          <View className="w-10" />
-        </View>
-
+        <AppHeader title="도매시장 시세" onBack={() => router.back()} />
         <View
           className="px-4 py-1.5"
           style={{ zIndex: 100 }} // 드롭다운이 헤더 아래로 가는 문제 방지
