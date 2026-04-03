@@ -1,11 +1,10 @@
 import axios from 'axios';
 import Constants from 'expo-constants';
 import {
-  getStoredRefreshToken,
   updateStoredTokens,
   clearAuthStorage,
 } from './storage';
-import { notifyTokensUpdated, notifyAuthCleared } from './tokenManager';
+import { getRefreshToken, notifyTokensUpdated, notifyAuthCleared } from './tokenManager';
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://api.webee.sbs';
 
@@ -55,8 +54,8 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // 저장된 refresh token 가져오기
-        const refreshToken = await getStoredRefreshToken();
+        // Zustand 메모리에서 refresh token 가져오기
+        const refreshToken = getRefreshToken();
         if (!refreshToken) {
           console.log('[API] refresh token 없음 - 재로그인 필요');
           await clearAuthStorage();
