@@ -1,15 +1,15 @@
-import React from 'react';
-import { View, Text, Pressable, Modal, Dimensions, Image } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import React from "react";
+import { View, Text, Pressable, Modal, Dimensions, Image } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
   withTiming,
   useSharedValue,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+} from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const MENU_WIDTH = SCREEN_WIDTH * 0.75;
 
 interface MenuItem {
@@ -19,11 +19,12 @@ interface MenuItem {
 }
 
 const menuItems: MenuItem[] = [
-  { id: 'bee-diagnosis', title: '꿀벌 질병 진단', icon: 'activity' },
-  { id: 'recommend', title: '수정벌 추천', icon: 'thumbs-up' },
-  { id: 'news', title: '수정벌 뉴스', icon: 'file-text' },
-  { id: 'pesticide', title: '맞춤 농약', icon: 'droplet' },
-  { id: 'trade', title: '거래 연결', icon: 'users' },
+  { id: "bee-diagnosis", title: "꿀벌 질병 진단", icon: "activity" },
+  { id: "recommend", title: "수정벌 추천", icon: "thumbs-up" },
+  { id: "bee-news", title: "수정벌 뉴스", icon: "file-text" },
+  { id: "bee-chat", title: "채팅 및 문의", icon: "dribbble" },
+  { id: "pesticide", title: "맞춤 농약", icon: "droplet" },
+  { id: "trade", title: "거래 연결", icon: "users" },
 ];
 
 interface SideMenuProps {
@@ -95,7 +96,7 @@ export function SideMenu({ visible, onClose, onMenuPress }: SideMenuProps) {
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6 pb-4 border-b border-gray-100">
             <Image
-              source={require('../../assets/branding/webee_logo.png')}
+              source={require("../../assets/branding/webee_logo.png")}
               style={{ width: 36, height: 36 }}
               resizeMode="contain"
             />

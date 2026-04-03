@@ -2,16 +2,19 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: [
-      ["babel-preset-expo", { jsxImportSource: "nativewind" }],
+      [
+        "babel-preset-expo",
+        { jsxImportSource: "nativewind", polyfillImportMeta: true },
+      ],
       "nativewind/babel",
     ],
     plugins: [
       [
-        'module-resolver',
+        "module-resolver",
         {
-          root: ['./'],
+          root: ["./"],
           alias: {
-            '@': './src',
+            "@": "./src",
           },
         },
       ],

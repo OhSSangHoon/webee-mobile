@@ -1,25 +1,47 @@
-import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, FlatList, Dimensions } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
-import { useAuthStore } from '@/stores/useAuthStore';
-import { useWeather, getWeatherIcon } from '@/features/weather';
-import { useFarmList } from '@/features/farm';
-import { Card } from '@/components/Card';
-import { NewsCarousel } from '@/components/NewsCarousel';
+import { useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  FlatList,
+  Dimensions,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { useWeather, getWeatherIcon } from "@/features/weather";
+import { useFarmList } from "@/features/farm";
+import { Card } from "@/components/Card";
+import { NewsCarousel } from "@/components/NewsCarousel";
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - 32;
 
 const TIPS = [
-  { id: '1', title: '온도 관리', content: '뒤영벌은 10~28도에서 가장 활발합니다', condition: '일반' },
-  { id: '2', title: '농약 주의', content: '수정벌 투입 전 농약 사용을 중단하세요', condition: '주의' },
-  { id: '3', title: '습도 체크', content: '습도가 높으면 벌의 활동량이 감소합니다', condition: '일반' },
+  {
+    id: "1",
+    title: "온도 관리",
+    content: "뒤영벌은 10~28도에서 가장 활발합니다",
+    condition: "일반",
+  },
+  {
+    id: "2",
+    title: "농약 주의",
+    content: "수정벌 투입 전 농약 사용을 중단하세요",
+    condition: "주의",
+  },
+  {
+    id: "3",
+    title: "습도 체크",
+    content: "습도가 높으면 벌의 활동량이 감소합니다",
+    condition: "일반",
+  },
 ];
 
 // 재배 방식 라벨 변환
 const getCultivationTypeLabel = (type: string) => {
-  return type === 'CONTROLLED' ? '시설재배' : '노지재배';
+  return type === "CONTROLLED" ? "시설재배" : "노지재배";
 };
 
 export default function Home() {
@@ -30,8 +52,7 @@ export default function Home() {
   const [currentFarmIndex, setCurrentFarmIndex] = useState(0);
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
-
-  const userName = user?.fullName || user?.username || '사용자';
+  const userName = user?.fullName || user?.username || "사용자";
   const today = new Date();
   const dateString = `${today.getMonth() + 1}월 ${today.getDate()}일`;
 
@@ -61,11 +82,19 @@ export default function Home() {
               {weather && !weatherLoading ? (
                 <View className="flex-row items-center">
                   <View className="w-11 h-11 rounded-xl bg-yellow-50 items-center justify-center mr-2">
-                    <Feather name={getWeatherIcon(weather.icon)} size={24} color="#F59E0B" />
+                    <Feather
+                      name={getWeatherIcon(weather.icon)}
+                      size={24}
+                      color="#F59E0B"
+                    />
                   </View>
                   <View className="items-end">
-                    <Text className="text-2xl font-bold text-gray-900">{weather.temperature}°</Text>
-                    <Text className="text-sm text-gray-600">{weather.description}</Text>
+                    <Text className="text-2xl font-bold text-gray-900">
+                      {weather.temperature}°
+                    </Text>
+                    <Text className="text-sm text-gray-600">
+                      {weather.description}
+                    </Text>
                   </View>
                 </View>
               ) : weatherLoading ? (
@@ -94,9 +123,13 @@ export default function Home() {
                 style={{ width: CARD_WIDTH }}
               >
                 <View className="self-start bg-black/10 px-2.5 py-1 rounded-full mb-2">
-                  <Text className="text-xs font-semibold text-black">{item.condition}</Text>
+                  <Text className="text-xs font-semibold text-black">
+                    {item.condition}
+                  </Text>
                 </View>
-                <Text className="text-base font-bold text-black mb-1">{item.title}</Text>
+                <Text className="text-base font-bold text-black mb-1">
+                  {item.title}
+                </Text>
                 <Text className="text-sm text-black/70">{item.content}</Text>
               </View>
             )}
@@ -106,7 +139,7 @@ export default function Home() {
               {TIPS.map((_, index) => (
                 <View
                   key={index}
-                  className={`h-1.5 rounded-full ${index === currentTipIndex ? 'w-4 bg-yellow-500' : 'w-1.5 bg-gray-400'}`}
+                  className={`h-1.5 rounded-full ${index === currentTipIndex ? "w-4 bg-yellow-500" : "w-1.5 bg-gray-400"}`}
                 />
               ))}
             </View>
@@ -117,7 +150,7 @@ export default function Home() {
         <View className="mb-6">
           <View className="flex-row items-center justify-between px-4 mb-2">
             <Text className="text-lg font-bold text-gray-900">내 농지</Text>
-            <Pressable onPress={() => router.push('/add-farm')}>
+            <Pressable onPress={() => router.push("/add-farm")}>
               <Feather name="plus" size={22} color="#6B7280" />
             </Pressable>
           </View>
@@ -147,17 +180,21 @@ export default function Home() {
                     <View className="flex-row items-center">
                       <View className="w-11 h-11 rounded-xl bg-blue-50 items-center justify-center mr-3">
                         <Feather
-                          name={item.cultivationType === 'CONTROLLED' ? 'home' : 'sun'}
+                          name={
+                            item.cultivationType === "CONTROLLED"
+                              ? "home"
+                              : "sun"
+                          }
                           size={18}
                           color="#3B82F6"
                         />
                       </View>
                       <View className="flex-1">
                         <Text className="text-base font-semibold text-gray-900">
-                          {item.name || '이름 없음'}
+                          {item.name || "이름 없음"}
                         </Text>
                         <Text className="text-sm text-gray-600 mt-0.5">
-                          {item.cultivationAddress || '주소 미등록'}
+                          {item.cultivationAddress || "주소 미등록"}
                         </Text>
                       </View>
                       <Feather name="chevron-right" size={20} color="#C7C7CC" />
@@ -167,7 +204,7 @@ export default function Home() {
                       <View className="flex-1 items-center">
                         <Text className="text-xs text-gray-600 mb-1">작물</Text>
                         <Text className="text-sm font-semibold text-gray-900">
-                          {item.name || '-'}
+                          {item.name || "-"}
                         </Text>
                       </View>
                       <View className="w-px bg-gray-100" />
@@ -193,7 +230,7 @@ export default function Home() {
                   {farms.map((_, index) => (
                     <View
                       key={index}
-                      className={`h-1.5 rounded-full ${index === currentFarmIndex ? 'w-4 bg-blue-500' : 'w-1.5 bg-gray-400'}`}
+                      className={`h-1.5 rounded-full ${index === currentFarmIndex ? "w-4 bg-blue-500" : "w-1.5 bg-gray-400"}`}
                     />
                   ))}
                 </View>
@@ -201,12 +238,16 @@ export default function Home() {
             </>
           ) : (
             <Pressable
-              onPress={() => router.push('/add-farm')}
+              onPress={() => router.push("/add-farm")}
               className="mx-4 bg-white rounded-2xl p-8 items-center active:scale-[0.98]"
             >
               <Feather name="map" size={32} color="#C7C7CC" />
-              <Text className="text-base font-semibold text-gray-900 mt-3">등록된 농지가 없습니다</Text>
-              <Text className="text-sm text-gray-600 mt-1">탭하여 농지를 등록해보세요</Text>
+              <Text className="text-base font-semibold text-gray-900 mt-3">
+                등록된 농지가 없습니다
+              </Text>
+              <Text className="text-sm text-gray-600 mt-1">
+                탭하여 농지를 등록해보세요
+              </Text>
             </Pressable>
           )}
         </View>
@@ -214,15 +255,59 @@ export default function Home() {
         {/* 4. 리포트 이동 링크 */}
         <View className="px-4 mb-6">
           <Pressable
-            onPress={() => router.push('/report')}
+            onPress={() => router.push("/report")}
             className="bg-white rounded-2xl p-4 flex-row items-center active:scale-[0.98]"
           >
             <View className="w-13 h-13 rounded-xl bg-yellow-100 items-center justify-center mr-3">
               <Feather name="edit-3" size={24} color="#F59E0B" />
             </View>
             <View className="flex-1">
-              <Text className="text-base font-semibold text-gray-900">농장 환경 리포트</Text>
-              <Text className="text-sm text-gray-600 mt-0.5">환경 데이터를 입력하고 맞춤 분석 받기</Text>
+              <Text className="text-base font-semibold text-gray-900">
+                농장 환경 리포트
+              </Text>
+              <Text className="text-sm text-gray-600 mt-0.5">
+                환경 데이터를 입력하고 맞춤 분석 받기
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="#C7C7CC" />
+          </Pressable>
+        </View>
+
+        {/* 4-1. 스마트벌통 관리 이동 링크 */}
+        <View className="px-4 mb-6">
+          <Pressable
+            onPress={() => router.push("/hive-control")}
+            className="bg-white rounded-2xl p-4 flex-row items-center active:scale-[0.98]"
+          >
+            <View className="w-13 h-13 rounded-xl bg-green-50 items-center justify-center mr-3">
+              <Feather name="zap" size={24} color="#10B981" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-semibold text-gray-900">
+                스마트벌통 관리
+              </Text>
+              <Text className="text-sm text-gray-600 mt-0.5">
+                실시간 벌통 상태 확인·제어
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={22} color="#C7C7CC" />
+          </Pressable>
+        </View>
+
+        {/* 시세 이동 */}
+        <View className="px-4 mb-6">
+          <Pressable
+            onPress={() => router.push("fruit-price")}
+            className="bg-white rounded-2xl p-4 flex-row items-center active:scale-[0.98]"
+          >
+            {" "}
+            <View className="w-13 h-13 rounded-xl bg-green-50 items-center justify-center mr-3">
+              <Feather name="zap" size={24} color="#10B981" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-base font-semibold text-gray-900">
+                시세확인
+              </Text>
             </View>
             <Feather name="chevron-right" size={22} color="#C7C7CC" />
           </Pressable>

@@ -1,26 +1,35 @@
-import { useState } from 'react';
-import { View, Text, Pressable, TextInput, Alert, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { useCreateFarm } from '@/features/farm';
-import { useKeyboard } from '@/hooks/useKeyboard';
-import type { UserCropCreateRequest, CultivationType } from '@/types/farm';
-import { CULTIVATION_TYPES } from '@/constants/farm';
+import { useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  TextInput,
+  Alert,
+  ScrollView,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { useCreateFarm } from "@/features/farm";
+import { useKeyboard } from "@/hooks/useKeyboard";
+import type { UserCropCreateRequest, CultivationType } from "@/types/farm";
+import { CULTIVATION_TYPES } from "@/constants/farm";
 
 export default function AddFarm() {
   const router = useRouter();
   const createFarmMutation = useCreateFarm();
 
-  const [cropName, setCropName] = useState('');
-  const [variety, setVariety] = useState('');
-  const [cultivationType, setCultivationType] = useState<CultivationType | ''>('');
-  const [address, setAddress] = useState('');
-  const [area, setArea] = useState('');
-  const [plantingYear, setPlantingYear] = useState('');
-  const [plantingMonth, setPlantingMonth] = useState('');
-  const [plantingDay, setPlantingDay] = useState('');
+  const [cropName, setCropName] = useState("");
+  const [variety, setVariety] = useState("");
+  const [cultivationType, setCultivationType] = useState<CultivationType | "">(
+    "",
+  );
+  const [address, setAddress] = useState("");
+  const [area, setArea] = useState("");
+  const [plantingYear, setPlantingYear] = useState("");
+  const [plantingMonth, setPlantingMonth] = useState("");
+  const [plantingDay, setPlantingDay] = useState("");
 
   const isValidDate = () => {
     const year = parseInt(plantingYear, 10);
@@ -36,7 +45,7 @@ export default function AddFarm() {
   };
 
   const canSubmit = () => {
-    return cultivationType !== '' && area.trim() !== '' && isValidDate();
+    return cultivationType !== "" && area.trim() !== "" && isValidDate();
   };
 
   const handleSubmit = () => {
@@ -47,7 +56,7 @@ export default function AddFarm() {
     const requestData: UserCropCreateRequest = {
       cultivationType: cultivationType as CultivationType,
       cultivationArea: parseInt(area, 10),
-      plantingDate: `${plantingYear}-${plantingMonth.padStart(2, '0')}-${plantingDay.padStart(2, '0')}`,
+      plantingDate: `${plantingYear}-${plantingMonth.padStart(2, "0")}-${plantingDay.padStart(2, "0")}`,
     };
 
     // Optional fields
@@ -58,16 +67,18 @@ export default function AddFarm() {
     createFarmMutation.mutate(requestData, {
       onSuccess: () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert('성공', '농지가 등록되었습니다.', [
-          { text: '확인', onPress: () => router.back() },
+        Alert.alert("성공", "농지가 등록되었습니다.", [
+          { text: "확인", onPress: () => router.back() },
         ]);
       },
       onError: (error: any) => {
-        console.error('Farm registration error:', error);
+        console.error("Farm registration error:", error);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         Alert.alert(
-          '오류',
-          error.response?.data?.message || error.message || '농지 등록에 실패했습니다.'
+          "오류",
+          error.response?.data?.message ||
+            error.message ||
+            "농지 등록에 실패했습니다.",
         );
       },
     });
@@ -96,7 +107,7 @@ export default function AddFarm() {
         style={{ flex: 1 }}
         contentContainerStyle={{
           padding: 16,
-          paddingBottom: isKeyboardVisible ? keyboardHeight + 100 : 120
+          paddingBottom: isKeyboardVisible ? keyboardHeight + 100 : 120,
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -104,7 +115,9 @@ export default function AddFarm() {
         {/* 재배 방식 */}
         <View className="bg-white rounded-2xl p-5 mb-4">
           <Text className="text-base font-bold text-gray-900">재배 방식</Text>
-          <Text className="text-sm text-gray-600 mt-1 mb-4">시설 유형을 선택해주세요</Text>
+          <Text className="text-sm text-gray-600 mt-1 mb-4">
+            시설 유형을 선택해주세요
+          </Text>
 
           <View className="flex-row gap-3">
             {CULTIVATION_TYPES.map((type) => {
@@ -118,24 +131,24 @@ export default function AddFarm() {
                   }}
                   className={`flex-1 items-center p-4 rounded-2xl border-2 ${
                     isSelected
-                      ? 'bg-yellow-50 border-yellow-500'
-                      : 'bg-gray-50 border-transparent'
+                      ? "bg-yellow-50 border-yellow-500"
+                      : "bg-gray-50 border-transparent"
                   }`}
                 >
                   <View
                     className={`w-14 h-14 rounded-full items-center justify-center mb-2 ${
-                      isSelected ? 'bg-yellow-500' : 'bg-gray-200'
+                      isSelected ? "bg-yellow-500" : "bg-gray-200"
                     }`}
                   >
                     <Feather
                       name={type.icon}
                       size={24}
-                      color={isSelected ? '#FFF' : '#888'}
+                      color={isSelected ? "#FFF" : "#888"}
                     />
                   </View>
                   <Text
                     className={`text-sm font-semibold ${
-                      isSelected ? 'text-gray-900' : 'text-gray-600'
+                      isSelected ? "text-gray-900" : "text-gray-600"
                     }`}
                   >
                     {type.label}
@@ -153,10 +166,14 @@ export default function AddFarm() {
 
         {/* 작물 정보 */}
         <View className="bg-white rounded-2xl p-5 mb-4">
-          <Text className="text-base font-bold text-gray-900 mb-4">작물 정보</Text>
+          <Text className="text-base font-bold text-gray-900 mb-4">
+            작물 정보
+          </Text>
 
           <View className="mb-4">
-            <Text className="text-sm font-semibold text-gray-600 mb-2">작물명</Text>
+            <Text className="text-sm font-semibold text-gray-600 mb-2">
+              작물명
+            </Text>
             <TextInput
               className="bg-gray-50 rounded-xl px-4 py-3.5 text-base text-gray-900"
               value={cropName}
@@ -167,7 +184,9 @@ export default function AddFarm() {
           </View>
 
           <View>
-            <Text className="text-sm font-semibold text-gray-600 mb-2">품종 (선택)</Text>
+            <Text className="text-sm font-semibold text-gray-600 mb-2">
+              품종 (선택)
+            </Text>
             <TextInput
               className="bg-gray-50 rounded-xl px-4 py-3.5 text-base text-gray-900"
               value={variety}
@@ -180,10 +199,14 @@ export default function AddFarm() {
 
         {/* 농지 정보 */}
         <View className="bg-white rounded-2xl p-5 mb-4">
-          <Text className="text-base font-bold text-gray-900 mb-4">농지 정보</Text>
+          <Text className="text-base font-bold text-gray-900 mb-4">
+            농지 정보
+          </Text>
 
           <View className="mb-4">
-            <Text className="text-sm font-semibold text-gray-600 mb-2">재배 지역</Text>
+            <Text className="text-sm font-semibold text-gray-600 mb-2">
+              재배 지역
+            </Text>
             <TextInput
               className="bg-gray-50 rounded-xl px-4 py-3.5 text-base text-gray-900"
               value={address}
@@ -195,9 +218,13 @@ export default function AddFarm() {
 
           <View>
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-sm font-semibold text-gray-600">재배 면적</Text>
+              <Text className="text-sm font-semibold text-gray-600">
+                재배 면적
+              </Text>
               <View className="bg-blue-100 px-2 py-0.5 rounded">
-                <Text className="text-xs font-semibold text-blue-600">필수</Text>
+                <Text className="text-xs font-semibold text-blue-600">
+                  필수
+                </Text>
               </View>
             </View>
             <View className="flex-row items-center gap-2">
@@ -210,7 +237,9 @@ export default function AddFarm() {
                 keyboardType="numeric"
               />
               <View className="bg-gray-200 px-4 py-3.5 rounded-xl">
-                <Text className="text-base font-semibold text-gray-600">평</Text>
+                <Text className="text-base font-semibold text-gray-600">
+                  평
+                </Text>
               </View>
             </View>
           </View>
@@ -224,7 +253,9 @@ export default function AddFarm() {
               <Text className="text-xs font-semibold text-blue-600">필수</Text>
             </View>
           </View>
-          <Text className="text-sm text-gray-600 mb-4">작물을 심은 날짜를 입력해주세요</Text>
+          <Text className="text-sm text-gray-600 mb-4">
+            작물을 심은 날짜를 입력해주세요
+          </Text>
 
           <View className="flex-row items-center gap-2">
             <View className="flex-1 flex-row items-center gap-1">
@@ -279,15 +310,15 @@ export default function AddFarm() {
           onPress={handleSubmit}
           disabled={!canSubmit() || isLoading}
           className={`items-center justify-center py-4 rounded-2xl ${
-            canSubmit() && !isLoading ? 'bg-yellow-500' : 'bg-gray-200'
+            canSubmit() && !isLoading ? "bg-yellow-500" : "bg-gray-200"
           }`}
         >
           <Text
             className={`text-base font-bold ${
-              canSubmit() && !isLoading ? 'text-white' : 'text-gray-500'
+              canSubmit() && !isLoading ? "text-white" : "text-gray-500"
             }`}
           >
-            {isLoading ? '등록 중...' : '농지 등록'}
+            {isLoading ? "등록 중..." : "농지 등록"}
           </Text>
         </Pressable>
       </View>

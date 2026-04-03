@@ -1,1 +1,1 @@
-export { default } from '@/screens/add-farm';
+export { default } from "@/screens/add-farm";
