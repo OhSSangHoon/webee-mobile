@@ -300,7 +300,6 @@ export default function Home() {
             onPress={() => router.push("fruit-price")}
             className="bg-white rounded-2xl p-4 flex-row items-center active:scale-[0.98]"
           >
-            {" "}
             <View className="w-13 h-13 rounded-xl bg-green-50 items-center justify-center mr-3">
               <Feather name="zap" size={24} color="#10B981" />
             </View>
