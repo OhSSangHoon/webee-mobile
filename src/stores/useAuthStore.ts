@@ -34,41 +34,26 @@ export const useAuthStore = create<AuthState>()(
       login: async (credentials) => {
         set({ isLoading: true });
         try {
-          console.log('=== 로그인 요청 ===');
-          console.log('Body:', JSON.stringify(credentials));
-
           const response = await api.post<ApiResponse<SignInResponseData>>(
             '/api/v1/auth/sign-in',
             credentials
           );
 
-          console.log('=== 로그인 응답 ===');
-          console.log('Status:', response.status);
-          console.log('Headers:', JSON.stringify(response.headers, null, 2));
-          console.log('Data:', JSON.stringify(response.data, null, 2));
-
           const { data } = response;
 
           if (data.code === '200' || data.code === 'OK') {
-            // Access Token 추출
-            // 1. 먼저 response body에서 확인
             let accessTokenFromBody = data.data?.accessToken || null;
 
-            // 2. Authorization 헤더에서 확인 (대소문자 모두 체크)
             const authHeader =
               response.headers['authorization'] ||
               response.headers['Authorization'] ||
               response.headers['AUTHORIZATION'];
             const headerToken = authHeader?.replace(/^Bearer\s+/i, '') || accessTokenFromBody;
 
-            // Refresh Token 추출
-            // 1. 먼저 response body에서 확인 (서버가 body에 포함하는 경우)
             let refreshToken: string | null = data.data?.refreshToken || null;
 
-            // 2. Set-Cookie 헤더에서 확인 (fallback)
             if (!refreshToken) {
               const setCookieHeader = response.headers['set-cookie'];
-              console.log('Set-Cookie 헤더:', setCookieHeader);
               if (setCookieHeader) {
                 const cookieString = Array.isArray(setCookieHeader) ? setCookieHeader.join('; ') : setCookieHeader;
                 const match = cookieString.match(/refreshToken=([^;]+)/);
@@ -78,15 +63,9 @@ export const useAuthStore = create<AuthState>()(
               }
             }
 
-            // 3. 다른 커스텀 헤더에서 확인
             if (!refreshToken) {
               refreshToken = response.headers['x-refresh-token'] || response.headers['refresh-token'] || null;
             }
-
-            console.log('=== 토큰 추출 ===');
-            console.log('Authorization 헤더:', authHeader);
-            console.log('Access Token:', headerToken ? `있음 (${headerToken.substring(0, 30)}...)` : '없음');
-            console.log('Refresh Token:', refreshToken ? `있음 (${refreshToken.substring(0, 30)}...)` : '없음');
 
             const accessToken = headerToken || null;
 
@@ -108,10 +87,6 @@ export const useAuthStore = create<AuthState>()(
             throw new Error(data.message);
           }
         } catch (error: any) {
-          console.log('=== 로그인 에러 ===');
-          console.log('Error message:', error.message);
-          console.log('Status:', error.response?.status);
-          console.log('Response:', JSON.stringify(error.response?.data, null, 2));
           set({ isLoading: false });
           throw error;
         }
@@ -185,10 +160,8 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
-        // 앱 시작 시 저장된 토큰을 API 헤더에 설정
         if (state?.accessToken) {
           api.defaults.headers.common['Authorization'] = `Bearer ${state.accessToken}`;
-          console.log('=== 토큰 복원됨 ===');
         }
       },
     }
@@ -203,9 +176,7 @@ registerTokenCallbacks(
       accessToken,
       refreshToken: refreshToken ?? useAuthStore.getState().refreshToken,
     });
-    console.log('[AuthStore] 토큰 동기화됨');
   },
-  // 인증 초기화 콜백
   () => {
     queryClient.clear();
     useAuthStore.setState({
@@ -214,7 +185,6 @@ registerTokenCallbacks(
       refreshToken: null,
       isAuthenticated: false,
     });
-    console.log('[AuthStore] 인증 초기화됨');
   },
   // refreshToken 조회 콜백 (Zustand 메모리에서 직접 읽기)
   () => useAuthStore.getState().refreshToken

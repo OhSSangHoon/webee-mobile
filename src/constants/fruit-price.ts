@@ -55,7 +55,6 @@ export const middleKey = (name: string) => `middle_${name}`;
 export const getTodayKST = () =>
   new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-console.log("TODAY_KST:", getTodayKST());
 
 // ──결과 테이블 정보 ─────────────────────────────────────────────────────────────────────
 

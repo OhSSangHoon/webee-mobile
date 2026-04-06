@@ -18,31 +18,19 @@ export const api = axios.create({
 
 // Request interceptor - 요청 로깅
 api.interceptors.request.use(
-  (config) => {
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
-    if (config.headers['Authorization']) {
-      console.log('[API Request] Authorization header present');
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (config) => config,
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor - 에러 처리
 api.interceptors.response.use(
-  (response) => {
-    console.log(`[API Response] ${response.status} ${response.config.url}`);
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
     // reissue 요청 자체가 실패하면 무한 루프 방지
     const isReissueRequest = originalRequest.url?.includes('/auth/reissue');
     if (isReissueRequest) {
-      console.log('[API] reissue 요청 실패 - 재로그인 필요');
       await clearAuthStorage();
       delete api.defaults.headers.common['Authorization'];
       notifyAuthCleared();
@@ -57,14 +45,11 @@ api.interceptors.response.use(
         // Zustand 메모리에서 refresh token 가져오기
         const refreshToken = getRefreshToken();
         if (!refreshToken) {
-          console.log('[API] refresh token 없음 - 재로그인 필요');
           await clearAuthStorage();
           delete api.defaults.headers.common['Authorization'];
           notifyAuthCleared();
           return Promise.reject(error);
         }
-
-        console.log('[API] 토큰 갱신 시도...', refreshToken.substring(0, 30) + '...');
 
         // fetch를 사용하여 쿠키와 함께 reissue 요청
         const refreshResponse = await fetch(`${API_URL}/api/v1/auth/reissue`, {
@@ -77,8 +62,6 @@ api.interceptors.response.use(
         });
 
         const refreshData = await refreshResponse.json();
-        console.log('[API] reissue 응답 status:', refreshResponse.status);
-        console.log('[API] reissue 응답 headers:', JSON.stringify(Object.fromEntries(refreshResponse.headers.entries())));
 
         if (!refreshResponse.ok) {
           throw new Error(`Reissue failed: ${refreshResponse.status}`);
@@ -99,9 +82,6 @@ api.interceptors.response.use(
           }
         }
 
-        console.log('[API] 새 access token:', newAccessToken ? '있음' : '없음');
-        console.log('[API] 새 refresh token:', newRefreshToken ? '있음' : '없음');
-
         if (newAccessToken) {
           // 토큰 업데이트
           api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
@@ -113,11 +93,9 @@ api.interceptors.response.use(
           // Zustand 스토어 동기화
           notifyTokensUpdated(newAccessToken, newRefreshToken);
 
-          console.log('[API] 토큰 갱신 성공');
           return api(originalRequest);
         }
       } catch (refreshError) {
-        console.log('[API] 토큰 갱신 실패 - 재로그인 필요');
         await clearAuthStorage();
         delete api.defaults.headers.common['Authorization'];
         notifyAuthCleared();
@@ -125,7 +103,6 @@ api.interceptors.response.use(
       }
     }
 
-    console.log(`[API Error] ${error.response?.status} ${error.config?.url}`);
     return Promise.reject(error);
   }
 );
