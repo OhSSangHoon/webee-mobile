@@ -13,13 +13,11 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-
     "expo": {
       "android": {
         "softwareKeyboardLayoutMode": "pan"
       }
     },
-
     "ios": {
       "supportsTablet": true
     },
@@ -34,7 +32,11 @@
     "web": {
       "favicon": "./assets/branding/webee_logo.png"
     },
-    "plugins": ["expo-router", "@react-native-community/datetimepicker"],
+    "plugins": [
+      "expo-router",
+      "@react-native-community/datetimepicker",
+      "expo-font"
+    ],
     "extra": {
       "WEATHER_API_KEY": "af3abab5447ba09c9b99af1252e0808e",
       "apiUrl": "https://api.webee.sbs"

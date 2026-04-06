@@ -76,8 +76,8 @@ export default function RootLayout() {
       case "bee-chat":
         router.push("/bee-chat");
         break;
-      case "trade": // ← 이거 없음
-        router.push("/trade");
+      case "bee-map":
+        router.push("/bee-map");
         break;
       case "hive-status":
         router.push("/hive-stats");
