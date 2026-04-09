@@ -39,7 +39,7 @@
     ],
     "extra": {
       "WEATHER_API_KEY": "af3abab5447ba09c9b99af1252e0808e",
-      "apiUrl": "https://api.webee.sbs"
+      "apiUrl": "https://webeelab.site"
     }
   }
 }
