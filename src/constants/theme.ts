@@ -12,3 +12,8 @@ export const Spacing = {
   buttonHeight: 52,
   pagePadding: 16,
 };
+
+export const Colors = {
+  active: "#ffa200",
+  inactive: "#190900",
+};

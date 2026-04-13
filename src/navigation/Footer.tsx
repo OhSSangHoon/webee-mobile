@@ -1,6 +1,7 @@
 import { View, Pressable, Text } from "react-native";
 import { useRouter, useSegments } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { Colors } from "../constants/theme";
 
 interface FooterTab {
   id: string;
@@ -36,12 +37,12 @@ export default function Footer() {
             <Feather
               name={tab.icon}
               size={22}
-              color={isActive ? "#F59E0B" : "#9CA3AF"}
+              color={isActive ? Colors.active : Colors.inactive}
               className="mb-1"
             />
             <Text
               className={`text-xs mt-1 ${
-                isActive ? "text-yellow-500 font-semibold" : "text-gray-500"
+                isActive ? "text-footer-active font-semibold" : "text-footer-inactive"
               }`}
             >
               {tab.label}
