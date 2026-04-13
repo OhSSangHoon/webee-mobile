@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from '@/lib/api';
 import { registerTokenCallbacks } from '@/lib/tokenManager';
 import { queryClient } from '@/providers';
-import type { User, LoginRequest, RegisterRequest, ApiResponse, SignInResponseData } from '@/types';
+import type { User, LoginRequest, RegisterRequest, ApiResponse, SignInResponseData, OAuthSignInResponse } from '@/types';
 
 interface AuthState {
   user: User | null;
@@ -13,6 +13,7 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
+  socialLogin: (platform: 'KAKAO' | 'NAVER', code: string) => Promise<OAuthSignInResponse>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
@@ -83,6 +84,60 @@ export const useAuthStore = create<AuthState>()(
             }
 
             set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
+          } else {
+            throw new Error(data.message);
+          }
+        } catch (error: any) {
+          set({ isLoading: false });
+          throw error;
+        }
+      },
+
+      socialLogin: async (platform, code) => {
+        set({ isLoading: true });
+        try {
+          const response = await api.get<ApiResponse<OAuthSignInResponse>>(
+            `/api/v1/oauth/sign-in/${platform}`,
+            { params: { code } }
+          );
+
+          const { data } = response;
+
+          if (data.code === '200' || data.code === 'OK') {
+            const authHeader =
+              response.headers['authorization'] ||
+              response.headers['Authorization'];
+            const accessToken = authHeader?.replace(/^Bearer\s+/i, '') || null;
+
+            let refreshToken: string | null = null;
+            const setCookieHeader = response.headers['set-cookie'];
+            if (setCookieHeader) {
+              const cookieString = Array.isArray(setCookieHeader) ? setCookieHeader.join('; ') : setCookieHeader;
+              const match = cookieString.match(/refreshToken=([^;]+)/);
+              if (match) refreshToken = match[1];
+            }
+            if (!refreshToken) {
+              refreshToken = response.headers['x-refresh-token'] || response.headers['refresh-token'] || null;
+            }
+
+            if (accessToken) {
+              api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            const user: User = {
+              id: '',
+              username: '',
+              email: '',
+              fullName: data.data.name,
+            };
+
+            set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
+
+            if (data.data.isNewUser) {
+              await api.post('/api/v1/oauth/register', { name: data.data.name });
+            }
+
+            return data.data;
           } else {
             throw new Error(data.message);
           }
