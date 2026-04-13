@@ -32,6 +32,9 @@ yarn-error.*
 # vercel
 .vercel
 
+# IDE
+.idea/
+
 # macOS
 .DS_Store
 *.pem
