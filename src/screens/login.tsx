@@ -1,14 +1,21 @@
 import { useState } from 'react';
-import { Pressable, View, Image, TextInput, Alert, Platform, ScrollView } from 'react-native';
+import { Pressable, View, Image, TextInput, Alert, ScrollView } from 'react-native';
 import { Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+import Constants from 'expo-constants';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/Button';
 import { useKeyboard } from '@/hooks/useKeyboard';
+
+const KAKAO_REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
+const NAVER_CLIENT_ID = process.env.EXPO_PUBLIC_NAVER_CLIENT_ID;
+const API_BASE = Constants.expoConfig?.extra?.apiUrl || 'https://webeelab.site';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -59,19 +66,41 @@ function SocialButton({ icon, label, bgColor, textColor, borderColor, onPress }:
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, isLoading } = useAuthStore();
+  const { login, socialLogin, isLoading } = useAuthStore();
   const [showEmailLogin, setShowEmailLogin] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSocialLogin = async (provider: string) => {
-    if (provider === '카카오') {
-      // 임시: 카카오 버튼 클릭 시 홈으로 이동
+  const handleSocialLogin = async (provider: 'KAKAO' | 'NAVER') => {
+    try {
+      const callbackUri = `${API_BASE}/api/v1/oauth/callback/${provider}`;
+      let authUrl = '';
+
+      if (provider === 'KAKAO') {
+        authUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(callbackUri)}&response_type=code`;
+      } else {
+        authUrl = `https://nid.naver.com/oauth2.0/authorize?client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(callbackUri)}&response_type=code&state=WEBEE`;
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, 'webee://oauth');
+
+      if (result.type !== 'success') return;
+
+      const parsed = Linking.parse(result.url);
+      const code = parsed.queryParams?.code as string;
+      const platform = (parsed.queryParams?.platform as 'KAKAO' | 'NAVER') ?? provider;
+
+      if (!code) {
+        Alert.alert('오류', '인가 코드를 받지 못했습니다');
+        return;
+      }
+
+      await socialLogin(platform, code);
       router.replace('/home');
-      return;
+    } catch (error: any) {
+      const message = error.response?.data?.message || '소셜 로그인에 실패했습니다';
+      Alert.alert('로그인 실패', message);
     }
-    // TODO: 소셜 로그인 구현
-    Alert.alert('알림', `${provider} 로그인은 준비 중입니다.`);
   };
 
   const handleEmailLogin = async () => {
@@ -136,36 +165,38 @@ export default function LoginScreen() {
           </View>
 
           {/* 입력 폼 */}
-          <View className="gap-4">
+          <View className="gap-5">
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">아이디</Text>
+              <Text className="text-base font-semibold text-gray-900 mb-2">아이디</Text>
               <TextInput
                 value={username}
                 onChangeText={setUsername}
                 placeholder="아이디를 입력하세요"
                 autoCapitalize="none"
                 autoCorrect={false}
-                className="w-full h-12 px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900"
+                className="w-full px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base"
                 placeholderTextColor="#9ca3af"
+                style={{ height: 52 }}
               />
             </View>
 
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">비밀번호</Text>
+              <Text className="text-base font-semibold text-gray-900 mb-2">비밀번호</Text>
               <TextInput
                 value={password}
                 onChangeText={setPassword}
                 placeholder="비밀번호를 입력하세요"
                 secureTextEntry
-                className="w-full h-12 px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900"
+                className="w-full px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base"
                 placeholderTextColor="#9ca3af"
+                style={{ height: 52 }}
               />
             </View>
 
-            <View className="flex-row justify-center items-center mt-4">
-              <Text className="text-gray-600">계정이 없으신가요? </Text>
+            <View className="flex-row justify-center items-center mt-2">
+              <Text className="text-gray-600 text-base">계정이 없으신가요? </Text>
               <Pressable onPress={handleGoToRegister}>
-                <Text className="text-blue-600 font-semibold">회원가입</Text>
+                <Text className="text-blue-600 font-semibold text-base">회원가입</Text>
               </Pressable>
             </View>
           </View>
@@ -219,26 +250,15 @@ export default function LoginScreen() {
             label="카카오로 시작하기"
             bgColor="#FEE500"
             textColor="#191600"
-            onPress={() => handleSocialLogin('카카오')}
+            onPress={() => handleSocialLogin('KAKAO')}
           />
 
-          {Platform.OS === 'ios' && (
-            <SocialButton
-              icon={<Feather name="smartphone" size={20} color="#FFFFFF" />}
-              label="Apple로 계속하기"
-              bgColor="#000000"
-              textColor="#FFFFFF"
-              onPress={() => handleSocialLogin('Apple')}
-            />
-          )}
-
           <SocialButton
-            icon={<Feather name="mail" size={20} color="#000000" />}
-            label="Google로 계속하기"
-            bgColor="#FFFFFF"
-            textColor="#000000"
-            borderColor="#E5E5E5"
-            onPress={() => handleSocialLogin('Google')}
+            icon={<Feather name="navigation" size={20} color="#FFFFFF" />}
+            label="네이버로 시작하기"
+            bgColor="#03C75A"
+            textColor="#FFFFFF"
+            onPress={() => handleSocialLogin('NAVER')}
           />
 
           {/* 구분선 */}
