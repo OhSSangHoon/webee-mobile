@@ -35,6 +35,11 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface OAuthSignInResponse {
+  isNewUser: boolean;
+  name: string;
+}
+
 // User statistics
 export interface UserStats {
   totalDiagnoses: number;

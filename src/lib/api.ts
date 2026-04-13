@@ -6,7 +6,7 @@ import {
 } from './storage';
 import { getRefreshToken, notifyTokensUpdated, notifyAuthCleared } from './tokenManager';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://api.webee.sbs';
+const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://webeelab.site';
 
 export const api = axios.create({
   baseURL: API_URL,
