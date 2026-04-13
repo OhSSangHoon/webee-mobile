@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { View } from 'react-native';
-import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { WebView } from 'react-native-webview';
 import { buildMapHtml } from '@/features/bee-map/utils/mapHtml';
 
 const KAKAO_MAP_API_KEY = process.env.EXPO_PUBLIC_KAKAO_MAP_API_KEY ?? '';
