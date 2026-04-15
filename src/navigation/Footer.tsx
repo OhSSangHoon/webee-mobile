@@ -10,11 +10,10 @@ interface FooterTab {
 }
 
 const TABS: FooterTab[] = [
-  { id: "bee-diagnosis", label: "진단", icon: "activity", route: "/bee-diagnosis" },
-  { id: "recommend", label: "추천", icon: "thumbs-up", route: "/recommend" },
+  { id: "hive-control", label: "벌통", icon: "zap", route: "/hive-control" },
   { id: "home", label: "홈", icon: "home", route: "/home" },
-  { id: "market", label: "장터", icon: "shopping-bag", route: "/market" },
-  { id: "profile", label: "마이", icon: "user", route: "/profile" },
+  { id: "community", label: "커뮤니티", icon: "users", route: "/community" },
+  { id: "profile", label: "마이페이지", icon: "user", route: "/profile" },
 ];
 
 export default function Footer() {

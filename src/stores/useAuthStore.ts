@@ -133,10 +133,6 @@ export const useAuthStore = create<AuthState>()(
 
             set({ user, accessToken, refreshToken, isAuthenticated: true, isLoading: false });
 
-            if (data.data.isNewUser) {
-              await api.post('/api/v1/oauth/register', { name: data.data.name });
-            }
-
             return data.data;
           } else {
             throw new Error(data.message);

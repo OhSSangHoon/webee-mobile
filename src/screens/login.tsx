@@ -95,8 +95,12 @@ export default function LoginScreen() {
         return;
       }
 
-      await socialLogin(platform, code);
-      router.replace('/home');
+      const result2 = await socialLogin(platform, code);
+      if (result2.isNewUser) {
+        router.replace('/oauth-register');
+      } else {
+        router.replace('/home');
+      }
     } catch (error: any) {
       const message = error.response?.data?.message || '소셜 로그인에 실패했습니다';
       Alert.alert('로그인 실패', message);
