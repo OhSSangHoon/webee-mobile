@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Alert, Pressable, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Alert, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { Button } from '@/components/Button';
 import { useKeyboard } from '@/hooks/useKeyboard';
+import { PhoneVerification } from '@/components/PhoneVerification';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -18,21 +19,6 @@ export default function RegisterScreen() {
     name: '',
     phoneNumber: '',
   });
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isVerificationSent, setIsVerificationSent] = useState(false);
-
-  const handleSendVerification = () => {
-    if (!formData.phoneNumber.trim()) {
-      Alert.alert('알림', '전화번호를 입력해주세요');
-      return;
-    }
-    if (!/^010\d{8}$/.test(formData.phoneNumber)) {
-      Alert.alert('알림', '전화번호 형식이 올바르지 않습니다 (01012345678)');
-      return;
-    }
-    Alert.alert('알림', 'SMS 인증 서비스는 준비 중입니다');
-    setIsVerificationSent(true);
-  };
 
   const handleRegister = async () => {
     if (!formData.username.trim()) {
@@ -43,12 +29,8 @@ export default function RegisterScreen() {
       Alert.alert('알림', '닉네임을 입력해주세요');
       return;
     }
-    if (!formData.phoneNumber.trim()) {
-      Alert.alert('알림', '전화번호를 입력해주세요');
-      return;
-    }
-    if (!/^010\d{8}$/.test(formData.phoneNumber)) {
-      Alert.alert('알림', '전화번호 형식이 올바르지 않습니다 (01012345678)');
+    if (!formData.phoneNumber) {
+      Alert.alert('알림', '전화번호 인증을 완료해주세요');
       return;
     }
     if (!formData.password) {
@@ -137,44 +119,9 @@ export default function RegisterScreen() {
           </View>
 
           {/* 전화번호 + 인증 */}
-          <View>
-            <Text className="text-base font-semibold text-gray-900 mb-2">전화번호</Text>
-            <View className="flex-row gap-2">
-              <TextInput
-                value={formData.phoneNumber}
-                onChangeText={(text) => setFormData({ ...formData, phoneNumber: text.replace(/[^0-9]/g, '') })}
-                placeholder="01012345678"
-                keyboardType="phone-pad"
-                maxLength={11}
-                className="flex-1 px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base"
-                placeholderTextColor="#9ca3af"
-                style={{ height: 52 }}
-              />
-              <TouchableOpacity
-                onPress={handleSendVerification}
-                className="justify-center items-center px-4 rounded-xl"
-                style={{ height: 52, backgroundColor: '#3b82f6', minWidth: 96 }}
-              >
-                <Text className="text-white font-semibold text-sm">인증번호 받기</Text>
-              </TouchableOpacity>
-            </View>
-
-            {isVerificationSent && (
-              <View className="mt-2">
-                <TextInput
-                  value={verificationCode}
-                  onChangeText={setVerificationCode}
-                  placeholder="인증번호 6자리 입력"
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  className="w-full px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base"
-                  placeholderTextColor="#9ca3af"
-                  style={{ height: 52 }}
-                />
-                <Text className="text-xs text-gray-400 mt-1 ml-1">SMS 인증 서비스 준비 중입니다</Text>
-              </View>
-            )}
-          </View>
+          <PhoneVerification
+            onVerified={(phone) => setFormData({ ...formData, phoneNumber: phone })}
+          />
 
           {/* 비밀번호 */}
           <View>
