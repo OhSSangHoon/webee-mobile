@@ -29,6 +29,7 @@ const HIDE_HEADER_ROUTES = [
   "add-farm",
   "report",
   "report-result",
+  "oauth-register",
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -78,9 +79,6 @@ export default function RootLayout() {
         break;
       case "bee-chat":
         router.push("/bee-chat");
-        break;
-      case "bee-map":
-        router.push("/bee-map");
         break;
       case "hive-status":
         router.push("/hive-stats");
