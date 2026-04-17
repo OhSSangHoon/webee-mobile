@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Switch, FlatList, Dimensions } from 'react-native';
+import { View, ScrollView, Pressable, Switch, FlatList, Dimensions } from 'react-native';
+import Text from '@/components/Text';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useFarmList } from '@/features/farm';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - 32 - 32; // ScrollView padding
@@ -50,7 +52,10 @@ export default function Profile() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const { data: farms = [], isLoading: farmsLoading } = useFarmList();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [newsNotificationEnabled, setNewsNotificationEnabled] = useState(false);
+  const [communityNotificationEnabled, setCommunityNotificationEnabled] = useState(false);
+  const [notificationsExpanded, setNotificationsExpanded] = useState(true);
+  const { fontOffset, increaseFontSize, decreaseFontSize } = useSettingsStore();
   const [currentFarmIndex, setCurrentFarmIndex] = useState(0);
 
   const onFarmScroll = (event: any) => {
@@ -95,21 +100,30 @@ export default function Profile() {
 
       {/* 내 농지 섹션 */}
       <View className="mb-4">
-        <View className="flex-row items-center justify-between px-5 mb-2">
-          <Text className="text-xs font-semibold text-gray-600">내 농지2</Text>
-          <Pressable onPress={handleAddFarmland}>
-            <Feather name="plus" size={20} color="#6B7280" />
-          </Pressable>
+        <View className="px-5 mb-2">
+          <Text className="text-xs font-semibold text-gray-600">내 농지</Text>
         </View>
 
         {farmsLoading ? (
-          <View className="mx-4 bg-white rounded-2xl p-8 items-center">
+          <View className="mx-4 bg-white rounded-2xl p-4 items-center">
             <Text className="text-sm text-gray-600">로딩중...</Text>
           </View>
-        ) : farms.length > 0 ? (
+        ) : farms.length === 0 ? (
+          <Pressable
+            onPress={handleAddFarmland}
+            className="mx-4 bg-white rounded-2xl p-4 items-center justify-center active:scale-[0.98]"
+            style={{ minHeight: 120 }}
+          >
+            <View className="w-11 h-11 rounded-xl bg-gray-100 items-center justify-center mb-2">
+              <Feather name="plus" size={20} color="#6B7280" />
+            </View>
+            <Text className="text-base font-semibold text-gray-900">농지 추가</Text>
+            <Text className="text-sm text-gray-600 mt-0.5">새 농지를 등록해보세요</Text>
+          </Pressable>
+        ) : (
           <>
             <FlatList
-              data={farms}
+              data={[...farms, { id: '__add__' } as any]}
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
@@ -119,77 +133,81 @@ export default function Profile() {
               onScroll={onFarmScroll}
               scrollEventThrottle={16}
               keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <Pressable
-                  className="bg-white rounded-2xl p-4 active:scale-[0.98]"
-                  style={{ width: CARD_WIDTH }}
-                >
-                  <View className="flex-row items-center">
-                    <View className="w-11 h-11 rounded-xl bg-blue-50 items-center justify-center mr-3">
-                      <Feather
-                        name={item.cultivationType === 'CONTROLLED' ? 'home' : 'sun'}
-                        size={18}
-                        color="#3B82F6"
-                      />
+              renderItem={({ item }) => {
+                if (item.id === '__add__') {
+                  return (
+                    <Pressable
+                      onPress={handleAddFarmland}
+                      className="bg-white rounded-2xl p-4 items-center justify-center active:scale-[0.98]"
+                      style={{ width: CARD_WIDTH, minHeight: 120 }}
+                    >
+                      <View className="w-11 h-11 rounded-xl bg-gray-100 items-center justify-center mb-2">
+                        <Feather name="plus" size={20} color="#6B7280" />
+                      </View>
+                      <Text className="text-base font-semibold text-gray-900">농지 추가</Text>
+                      <Text className="text-sm text-gray-600 mt-0.5">새 농지를 등록해보세요</Text>
+                    </Pressable>
+                  );
+                }
+                return (
+                  <Pressable
+                    className="bg-white rounded-2xl p-4 active:scale-[0.98]"
+                    style={{ width: CARD_WIDTH }}
+                  >
+                    <View className="flex-row items-center">
+                      <View className="w-11 h-11 rounded-xl bg-blue-50 items-center justify-center mr-3">
+                        <Feather
+                          name={item.cultivationType === 'CONTROLLED' ? 'home' : 'sun'}
+                          size={18}
+                          color="#3B82F6"
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-base font-semibold text-gray-900">
+                          {item.name || '이름 없음'}
+                        </Text>
+                        <Text className="text-sm text-gray-600 mt-0.5">
+                          {item.cultivationAddress || '주소 미등록'}
+                        </Text>
+                      </View>
+                      <Feather name="chevron-right" size={20} color="#C7C7CC" />
                     </View>
-                    <View className="flex-1">
-                      <Text className="text-base font-semibold text-gray-900">
-                        {item.name || '이름 없음'}
-                      </Text>
-                      <Text className="text-sm text-gray-600 mt-0.5">
-                        {item.cultivationAddress || '주소 미등록'}
-                      </Text>
+                    <View className="h-px bg-gray-100 my-3" />
+                    <View className="flex-row">
+                      <View className="flex-1 items-center">
+                        <Text className="text-xs text-gray-600 mb-1">작물</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {item.name || '-'}
+                        </Text>
+                      </View>
+                      <View className="w-px bg-gray-100" />
+                      <View className="flex-1 items-center">
+                        <Text className="text-xs text-gray-600 mb-1">시설</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {getCultivationTypeLabel(item.cultivationType)}
+                        </Text>
+                      </View>
+                      <View className="w-px bg-gray-100" />
+                      <View className="flex-1 items-center">
+                        <Text className="text-xs text-gray-600 mb-1">면적</Text>
+                        <Text className="text-sm font-semibold text-gray-900">
+                          {item.cultivationArea}평
+                        </Text>
+                      </View>
                     </View>
-                    <Feather name="chevron-right" size={20} color="#C7C7CC" />
-                  </View>
-                  <View className="h-px bg-gray-100 my-3" />
-                  <View className="flex-row">
-                    <View className="flex-1 items-center">
-                      <Text className="text-xs text-gray-600 mb-1">작물</Text>
-                      <Text className="text-sm font-semibold text-gray-900">
-                        {item.name || '-'}
-                      </Text>
-                    </View>
-                    <View className="w-px bg-gray-100" />
-                    <View className="flex-1 items-center">
-                      <Text className="text-xs text-gray-600 mb-1">시설</Text>
-                      <Text className="text-sm font-semibold text-gray-900">
-                        {getCultivationTypeLabel(item.cultivationType)}
-                      </Text>
-                    </View>
-                    <View className="w-px bg-gray-100" />
-                    <View className="flex-1 items-center">
-                      <Text className="text-xs text-gray-600 mb-1">면적</Text>
-                      <Text className="text-sm font-semibold text-gray-900">
-                        {item.cultivationArea}평
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              )}
+                  </Pressable>
+                );
+              }}
             />
-            {farms.length > 1 && (
-              <View className="flex-row justify-center mt-3 gap-1.5">
-                {farms.map((_, index) => (
-                  <View
-                    key={index}
-                    className={`h-1.5 rounded-full ${index === currentFarmIndex ? 'w-4 bg-blue-500' : 'w-1.5 bg-gray-400'}`}
-                  />
-                ))}
-              </View>
-            )}
+            <View className="flex-row justify-center mt-3 gap-1.5">
+              {[...farms, null].map((_, index) => (
+                <View
+                  key={index}
+                  className={`h-1.5 rounded-full ${index === currentFarmIndex ? 'w-4 bg-blue-500' : 'w-1.5 bg-gray-400'}`}
+                />
+              ))}
+            </View>
           </>
-        ) : (
-          <Pressable
-            onPress={handleAddFarmland}
-            className="mx-4 bg-white rounded-2xl p-8 items-center active:scale-[0.98]"
-          >
-            <Feather name="map" size={32} color="#C7C7CC" />
-            <Text className="text-base font-semibold text-gray-900 mt-3">
-              등록된 농지가 없습니다
-            </Text>
-            <Text className="text-sm text-gray-600 mt-1">탭하여 농지를 등록해보세요</Text>
-          </Pressable>
         )}
       </View>
 
@@ -202,28 +220,66 @@ export default function Profile() {
           <MenuItem
             icon="bell"
             label="알림"
-            onPress={() => setNotificationsEnabled(!notificationsEnabled)}
+            onPress={() => setNotificationsExpanded(!notificationsExpanded)}
             rightElement={
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#E5E5EA", true: "#F59E0B" }}
-                thumbColor="#FFFFFF"
+              <Feather
+                name={notificationsExpanded ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="#C7C7CC"
               />
             }
           />
+          {notificationsExpanded && (
+            <>
+              <View className="h-px bg-gray-100 ml-11" />
+              <Pressable
+                onPress={() => setNewsNotificationEnabled(!newsNotificationEnabled)}
+                className="flex-row items-center pl-11 pr-4 py-3 active:bg-gray-50"
+              >
+                <Text className="flex-1 text-base text-gray-900">뉴스</Text>
+                <Switch
+                  value={newsNotificationEnabled}
+                  onValueChange={setNewsNotificationEnabled}
+                  trackColor={{ false: "#E5E5EA", true: "#F59E0B" }}
+                  thumbColor="#FFFFFF"
+                />
+              </Pressable>
+              <View className="h-px bg-gray-100 ml-11" />
+              <Pressable
+                onPress={() => setCommunityNotificationEnabled(!communityNotificationEnabled)}
+                className="flex-row items-center pl-11 pr-4 py-3 active:bg-gray-50"
+              >
+                <Text className="flex-1 text-base text-gray-900">커뮤니티</Text>
+                <Switch
+                  value={communityNotificationEnabled}
+                  onValueChange={setCommunityNotificationEnabled}
+                  trackColor={{ false: "#E5E5EA", true: "#F59E0B" }}
+                  thumbColor="#FFFFFF"
+                />
+              </Pressable>
+            </>
+          )}
           <View className="h-px bg-gray-100 ml-11" />
-          <MenuItem
-            icon="globe"
-            label="언어"
-            onPress={() => {}}
-            rightElement={
-              <View className="flex-row items-center gap-1">
-                <Text className="text-base text-gray-600">한국어</Text>
-                <Feather name="chevron-right" size={18} color="#C7C7CC" />
-              </View>
-            }
-          />
+          <View className="flex-row items-center px-4 py-3">
+            <Feather name="type" size={20} color="#8E8E93" style={{ marginRight: 12 }} />
+            <Text className="flex-1 text-base text-gray-900">폰트 크기</Text>
+            <View className="flex-row items-center gap-3">
+              <Pressable
+                onPress={decreaseFontSize}
+                disabled={fontOffset <= -2}
+                className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
+              >
+                <Feather name="minus" size={16} color={fontOffset <= -2 ? "#C7C7CC" : "#6B7280"} />
+              </Pressable>
+              <Pressable
+                onPress={increaseFontSize}
+                disabled={fontOffset >= 2}
+                className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center active:bg-gray-200"
+              >
+                <Feather name="plus" size={16} color={fontOffset >= 2 ? "#C7C7CC" : "#6B7280"} />
+              </Pressable>
+            </View>
+          </View>
           <View className="h-px bg-gray-100 ml-11" />
           <MenuItem icon="help-circle" label="고객센터" onPress={() => {}} />
           <View className="h-px bg-gray-100 ml-11" />
