@@ -15,5 +15,5 @@ export const Spacing = {
 
 export const Colors = {
   active: "#ffa200",
-  inactive: "#190900",
+  inactive: "#2a2c33",
 };

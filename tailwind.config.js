@@ -42,7 +42,7 @@ module.exports = {
         // Footer Colors
         footer: {
           active: "#ffa200",
-          inactive: "#190900",
+          inactive: "#2a2c33",
         },
       },
     },

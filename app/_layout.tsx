@@ -13,7 +13,6 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import "../global.css";
 import { Providers } from "@/providers";
 import Header from "@/navigation/Header";
 import Footer from "@/navigation/Footer";

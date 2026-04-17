@@ -1,12 +1,12 @@
 import { View, Pressable, Text } from "react-native";
 import { useRouter, useSegments } from "expo-router";
-import { Feather } from "@expo/vector-icons";
+import { MaterialCommunityIcons,Feather  } from "@expo/vector-icons";
 import { Colors } from "../constants/theme";
 
 interface FooterTab {
   id: string;
   label: string;
-  icon: keyof typeof Feather.glyphMap;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
   route: string;
 }
 
@@ -14,18 +14,18 @@ const TABS: FooterTab[] = [
   {
     id: "bee-diagnosis",
     label: "새소식",
-    icon: "activity",
+    icon: "comment-alert-outline",
     route: "/community",
   },
   {
     id: "recommend",
     label: "벌관리",
-    icon: "thumbs-up",
+    icon: "bee-flower",
     route: "/hive-control",
   },
   { id: "home", label: "홈", icon: "home", route: "/home" },
-  { id: "market", label: "장터", icon: "shopping-bag", route: "/market" },
-  { id: "profile", label: "마이", icon: "user", route: "/profile" },
+  { id: "market", label: "장터", icon: "store", route: "/market" },
+  { id: "profile", label: "마이", icon: "account", route: "/profile" },
 ];
 
 export default function Footer() {
@@ -41,12 +41,12 @@ export default function Footer() {
         return (
           <Pressable
             key={tab.id}
-            className="flex-1 items-center py-2"
+            className="flex-1 items-center py-1"
             onPress={() => router.push(tab.route as any)}
           >
-            <Feather
+            <MaterialCommunityIcons 
               name={tab.icon}
-              size={22}
+              size={30}
               color={isActive ? Colors.active : Colors.inactive}
               className="mb-1"
             />
