@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Alert } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '@/lib/api';
 import { Button } from '@/components/Button';
+import { PhoneVerification } from '@/components/PhoneVerification';
 
 export default function OAuthRegisterScreen() {
   const router = useRouter();
@@ -11,12 +12,8 @@ export default function OAuthRegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!phoneNumber.trim()) {
-      Alert.alert('알림', '전화번호를 입력해주세요');
-      return;
-    }
-    if (!/^010\d{8}$/.test(phoneNumber)) {
-      Alert.alert('알림', '올바른 전화번호를 입력해주세요 (예: 01012345678)');
+    if (!phoneNumber) {
+      Alert.alert('알림', '전화번호 인증을 완료해주세요');
       return;
     }
 
@@ -38,19 +35,7 @@ export default function OAuthRegisterScreen() {
         <Text className="text-2xl font-bold text-gray-900 mb-2">추가 정보 입력</Text>
         <Text className="text-base text-gray-500 mb-10">서비스 이용을 위해 전화번호를 입력해주세요</Text>
 
-        <View className="mb-6">
-          <Text className="text-base font-semibold text-gray-900 mb-2">전화번호</Text>
-          <TextInput
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            placeholder="01012345678"
-            keyboardType="phone-pad"
-            maxLength={11}
-            className="w-full px-4 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 text-base"
-            placeholderTextColor="#9ca3af"
-            style={{ height: 52 }}
-          />
-        </View>
+        <PhoneVerification onVerified={setPhoneNumber} />
       </View>
 
       <View className="px-6 pb-10">
