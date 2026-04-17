@@ -1,7 +1,9 @@
 import { useState } from "react";
+import "../global.css";
 import { StatusBar, View, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Slot, useRouter, useSegments } from "expo-router";
+import {  useEffect } from "react";
 import {
   Gesture,
   GestureDetector,
@@ -17,6 +19,7 @@ import { Providers } from "@/providers";
 import Header from "@/navigation/Header";
 import Footer from "@/navigation/Footer";
 import { SideMenu } from "@/components/SideMenu";
+import * as SplashScreen from "expo-splash-screen";
 
 // 헤더를 숨길 페이지들
 const HIDE_HEADER_ROUTES = [
@@ -37,6 +40,7 @@ export default function RootLayout() {
   const segments = useSegments();
   const translateX = useSharedValue(0);
   const [menuVisible, setMenuVisible] = useState(false);
+
 
   // 현재 라우트가 헤더를 숨겨야 하는 페이지인지 확인
   const currentRoute = segments[0] || "index";
