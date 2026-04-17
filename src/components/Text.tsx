@@ -1,0 +1,28 @@
+import { Text as RNText, TextProps } from 'react-native';
+import { useSettingsStore } from '@/stores/useSettingsStore';
+
+const TAILWIND_SIZES: Record<string, number> = {
+  'text-xs': 12,
+  'text-sm': 14,
+  'text-base': 16,
+  'text-lg': 18,
+  'text-xl': 20,
+  'text-2xl': 24,
+  'text-3xl': 30,
+};
+
+export default function Text({ className, style, ...props }: TextProps) {
+  const fontOffset = useSettingsStore((s) => s.fontOffset);
+
+  const baseSize = className
+    ? Object.entries(TAILWIND_SIZES).find(([cls]) => className.includes(cls))?.[1]
+    : undefined;
+
+  return (
+    <RNText
+      className={className}
+      style={[baseSize != null && { fontSize: baseSize + fontOffset }, style]}
+      {...props}
+    />
+  );
+}
