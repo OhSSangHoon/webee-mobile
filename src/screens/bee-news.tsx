@@ -175,7 +175,11 @@ export default function BeeNewsScreen() {
         <View className="flex-1 items-center justify-center gap-4 p-10">
           <Feather name="wifi-off" size={48} color={TossColors.textTertiary} />
           <Text className="text-base text-gray-500 text-center leading-6">
-            {String(error?.message || "뉴스를 불러오지 못했어요.")}
+            {String(
+              error instanceof Error
+                ? error.message
+                : "뉴스를 불러오지 못했어요.",
+            )}
           </Text>
           <Pressable
             onPress={() => refetch()}
