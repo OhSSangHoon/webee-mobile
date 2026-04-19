@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../global.css";
 import { StatusBar, View, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Slot, useRouter, useSegments } from "expo-router";
-import {  useEffect } from "react";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+
 import {
   Gesture,
   GestureDetector,
@@ -19,7 +21,8 @@ import { Providers } from "@/providers";
 import Header from "@/navigation/Header";
 import Footer from "@/navigation/Footer";
 import { SideMenu } from "@/components/SideMenu";
-import * as SplashScreen from "expo-splash-screen";
+
+SplashScreen.preventAutoHideAsync();
 
 // 헤더를 숨길 페이지들
 const HIDE_HEADER_ROUTES = [
@@ -37,11 +40,33 @@ const SWIPE_EDGE_WIDTH = 30; // 스와이프 감지 영역 너비
 const SWIPE_THRESHOLD = 80; // 뒤로가기 트리거 거리
 
 export default function RootLayout() {
+  const [loaded] = useFonts({
+    "Pretendard-Thin": require("../assets/font/Pretendard-Thin.ttf"),
+    "Pretendard-Light": require("../assets/font/Pretendard-Light.ttf"),
+    "Pretendard-Regular": require("../assets/font/Pretendard-Regular.ttf"),
+    "Pretendard-Medium": require("../assets/font/Pretendard-Medium.ttf"),
+    "Pretendard-SemiBold": require("../assets/font/Pretendard-SemiBold.ttf"),
+    "Pretendard-Bold": require("../assets/font/Pretendard-Bold.ttf"),
+    "Pretendard-ExtraBold": require("../assets/font/Pretendard-ExtraBold.ttf"),
+    "Pretendard-Black": require("../assets/font/Pretendard-Black.ttf"),
+  });
+
   const router = useRouter();
   const segments = useSegments();
   const translateX = useSharedValue(0);
   const [menuVisible, setMenuVisible] = useState(false);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
+  // 폰트 로드 완료 시 스플래시 숨김 (깜빡임 방지)
+  useEffect(() => {
+    if (loaded) SplashScreen.hideAsync();
+  }, [loaded]);
+
+  // 폰트가 아직 로드 중이면 아무것도 렌더링하지 않음
+  // (스플래시가 유지되므로 사용자 눈에는 보이지 않음)
+  if (!loaded) return null;
 
   // 현재 라우트가 헤더를 숨겨야 하는 페이지인지 확인
   const currentRoute = segments[0] || "index";
@@ -119,10 +144,6 @@ export default function RootLayout() {
         runOnJS(resetPosition)();
       }
     });
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }],
-  }));
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
