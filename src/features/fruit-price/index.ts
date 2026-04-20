@@ -5,3 +5,10 @@ export {
   getMiddleOptions,
   getSmallOptions,
 } from "./hooks/utils";
+
+export {
+  useInterestMarkets,
+  useAddInterestMarket,
+  useDeleteInterestMarket,
+  type InterestMarket,
+} from "./hooks/index";
