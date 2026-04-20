@@ -9,7 +9,7 @@
  * usePesticideList
  *   - 전체 데이터 1회 조회 후 클라이언트 필터링
  *   - AsyncStorage에 있으면 API 호출 없음
- *   - 필터/페이지는 useMemo + slice로 처리
+ *   - 필터/페이지/검색어는 useMemo + slice로 처리
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -32,7 +32,7 @@ export const useCodeOptions = () => {
   const [isError, setIsError] = useState(false);
 
   const fetch = async () => {
-    if (aList.length > 0) return; // 저장된 데이터 있으면 스킵
+    if (aList.length > 0) return;
 
     setIsLoading(true);
     setIsError(false);
@@ -43,8 +43,6 @@ export const useCodeOptions = () => {
           params: { apiKey: API_KEY },
           responseType: "text",
         });
-
-        console.log("[농약API] raw 응답 앞 500자!!:", data.slice(0, 500));
 
         const opts = parseOptions(data);
         const result = {
@@ -62,26 +60,14 @@ export const useCodeOptions = () => {
         }
 
         setOptions(result.aList, result.bList, result.cList);
-        console.log("[농약API] ✅ 코드 목록 로드 성공");
-        console.log(
-          `[농약API] 작물 ${result.aList.length}건 | 용도 ${result.bList.length}건 | 곤충 ${result.cList.length}건`,
-        );
-
         setIsLoading(false);
         return;
       } catch (err) {
-        console.warn(
-          `[농약API] ❌ 코드 목록 ${attempt}/${MAX_RETRY} 실패 — ${(err as Error).message}`,
-        );
-
         if (attempt === MAX_RETRY) {
-          console.error("[농약API] 🚨 코드 목록 최대 재시도 초과");
           setIsError(true);
           setIsLoading(false);
           return;
         }
-
-        console.log(`[농약API] ⏳ ${RETRY_DELAY_MS / 1000}초 후 재시도...`);
         await wait(RETRY_DELAY_MS);
       }
     }
@@ -94,15 +80,15 @@ export const useCodeOptions = () => {
   return { isLoading, isError, refetch: fetch };
 };
 
-// ── 전체 데이터 조회 + 필터링 + 페이지네이션 ─────────────────────────────────
+// ── 전체 데이터 조회 + 필터링 + 검색 + 페이지네이션 ──────────────────────────
 export const usePesticideList = () => {
-  const { crop, usage, insect, page, allItems, setAllItems } =
+  const { crop, usage, insect, page, query, allItems, setAllItems } =
     usePesticideStore();
   const [isFetching, setIsFetching] = useState(false);
   const [isError, setIsError] = useState(false);
 
   const fetch = async () => {
-    if (allItems.length > 0) return; // 저장된 데이터 있으면 스킵
+    if (allItems.length > 0) return;
 
     setIsFetching(true);
     setIsError(false);
@@ -115,28 +101,17 @@ export const usePesticideList = () => {
         });
 
         const items = parseResults(data);
-
         if (!items.length) throw new Error("데이터가 비어있습니다.");
 
         setAllItems(items);
-        console.log("[농약API] ✅ 전체 목록 로드 성공");
-        console.log(`[농약API] 총 ${items.length}건 저장 완료`);
-
         setIsFetching(false);
         return;
       } catch (err) {
-        console.warn(
-          `[농약API] ❌ 전체 목록 ${attempt}/${MAX_RETRY} 실패 — ${(err as Error).message}`,
-        );
-
         if (attempt === MAX_RETRY) {
-          console.error("[농약API] 🚨 전체 목록 최대 재시도 초과");
           setIsError(true);
           setIsFetching(false);
           return;
         }
-
-        console.log(`[농약API] ⏳ ${RETRY_DELAY_MS / 1000}초 후 재시도...`);
         await wait(RETRY_DELAY_MS);
       }
     }
@@ -146,19 +121,40 @@ export const usePesticideList = () => {
     fetch();
   }, []);
 
-  // 필터링 — 저장된 전체 데이터에서 JS filter()
-  const filteredItems = useMemo(
-    () =>
-      allItems.filter(
-        (r) =>
-          (!crop || r.cropsNm === crop) &&
-          (!usage || r.prpos === usage) &&
-          (!insect || r.sprngspcsNm === insect),
-      ),
-    [allItems, crop, usage, insect],
-  );
+  // 드롭다운 필터 + 검색어 필터 (클라이언트 JS)
+  const filteredItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return allItems.filter((r) => {
+      const matchFilter =
+        (!crop || r.cropsNm === crop) &&
+        (!usage || r.prpos === usage) &&
+        (!insect || r.sprngspcsNm === insect);
 
-  // 페이지네이션
+      // 검색어: 상표명 OR 병해충명
+      const matchQuery =
+        !q ||
+        r.brandNm.toLowerCase().includes(q) ||
+        r.applcsicknsHlsctsickns.toLowerCase().includes(q);
+
+      return matchFilter && matchQuery;
+    });
+  }, [allItems, crop, usage, insect, query]);
+
+  // 추천 검색어 — 현재 필터 기준 상표명/병해충명 unique 목록 (최대 8개)
+  const suggestions = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.trim().toLowerCase();
+    const set = new Set<string>();
+
+    allItems.forEach((r) => {
+      if (r.brandNm.toLowerCase().includes(q)) set.add(r.brandNm);
+      if (r.applcsicknsHlsctsickns.toLowerCase().includes(q))
+        set.add(r.applcsicknsHlsctsickns);
+    });
+
+    return Array.from(set).slice(0, 8);
+  }, [allItems, query]);
+
   const totalPages = Math.max(
     1,
     Math.ceil(filteredItems.length / ROWS_PER_PAGE),
@@ -172,6 +168,7 @@ export const usePesticideList = () => {
     items,
     totalPages,
     totalCount: filteredItems.length,
+    suggestions,
     isFetching,
     isError,
     refetch: fetch,

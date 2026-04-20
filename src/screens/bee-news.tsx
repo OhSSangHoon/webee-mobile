@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   View,
   Pressable,
@@ -8,99 +8,172 @@ import {
   Linking,
   ScrollView,
   Text,
+  TextInput,
+  Modal,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
+
+import { useNews } from "@/features";
+
+import {
+  useInterestKeywords,
+  useAddInterestKeyword,
+} from "@/features/bee-news";
+import { formatDateKorean } from "@/lib/utils";
+import AppHeader from "@/components/AppHeader";
 import Pagination from "@/components/pagination";
+import { NewsCardSkeleton, KeywordChipSkeleton } from "@/components/Skeleton";
+import type { NewsItem } from "@/types/news";
 
-const KEYWORDS = [
-  { label: "수정벌", value: "수정벌" },
-  { label: "꿀벌", value: "꿀벌" },
-  { label: "호박벌", value: "호박벌" },
-  { label: "양봉", value: "양봉" },
-];
+const DEFAULT_KEYWORDS = ["수정벌", "꿀벌", "호박벌", "양봉"];
+const PAGE_SIZE = 5;
 
-const TossColors = {
+const C = {
   primary: "#C68A00",
   primaryLight: "#FFD55F",
   primaryBg: "#FFF8E1",
-  primaryBadgeBg: "#FFF3D6",
-  background: "#F4F5F7",
-  white: "#FFFFFF",
   text: "#191F28",
   textSecondary: "#8B95A1",
   textTertiary: "#B0B8C1",
-  border: "#E5E8EB",
 };
 
-import { NewsItem } from "@/types/news";
-import { useNews } from "@/features";
-import { formatDateKorean } from "@/lib/utils";
-import AppHeader from "@/components/AppHeader";
+// ── 키워드 추가 바텀시트
+function AddKeywordSheet({
+  visible,
+  onClose,
+  onAdd,
+  isPending,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onAdd: (kw: string) => void;
+  isPending: boolean;
+}) {
+  const [value, setValue] = useState("");
+  const inputRef = useRef<TextInput>(null);
 
-// 한 화면에 5개씩 표시 — 최대 5페이지(최대 25개 항목 기준)
-const PAGE_SIZE = 5;
-
-export default function BeeNewsScreen() {
-  const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedKeyword, setSelectedKeyword] = useState("수정벌");
-
-  // use internal Google News fetch (no backend auth required)
-  const {
-    data: news = [],
-    isLoading,
-    error,
-    refetch,
-  } = useNews(selectedKeyword);
-
-  // 키워드 변경 시(또는 화면 로드 시) 항상 최신 데이터를 강제 로드하여
-  // 최대 25개 항목이 반영되도록 합니다.
-  useEffect(() => {
-    refetch().catch(() => {});
-  }, [selectedKeyword, refetch]);
-
-  const handleKeywordChange = (keyword: string) => {
-    if (keyword === selectedKeyword) return;
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setSelectedKeyword(keyword);
-    setCurrentPage(1);
+  const handleSubmit = () => {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    onAdd(trimmed);
+    setValue("");
   };
 
-  const handleGoBack = () => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    navigation.goBack();
-  };
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <Pressable className="flex-1 bg-black/40" onPress={onClose} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View className="bg-white rounded-t-3xl px-5 pt-5 pb-8">
+          {/* 핸들 */}
+          <View className="w-10 h-1 rounded-full bg-gray-200 self-center mb-5" />
 
-  const handlePageChange = (page: number) => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    setCurrentPage(page);
-  };
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: "700",
+              color: C.text,
+              marginBottom: 4,
+            }}
+          >
+            키워드 추가
+          </Text>
+          <Text
+            style={{ fontSize: 14, color: C.textSecondary, marginBottom: 20 }}
+          >
+            관심 있는 키워드를 등록하면{"\n"}해당 뉴스를 바로 모아볼 수 있어요.
+          </Text>
 
-  const handleOpenLink = (url: string) => {
-    if (Platform.OS !== "web") {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    Linking.openURL(url);
-  };
+          {/* 입력 */}
+          <View
+            className="flex-row items-center rounded-2xl px-4 gap-3"
+            style={{ backgroundColor: "#F4F5F7", height: 52 }}
+          >
+            <Feather name="search" size={18} color={C.textTertiary} />
+            <TextInput
+              ref={inputRef}
+              value={value}
+              onChangeText={setValue}
+              placeholder="ex. 토마토, 딸기, 블루베리..."
+              placeholderTextColor={C.textTertiary}
+              style={{ flex: 1, fontSize: 15, color: C.text }}
+              autoFocus
+              returnKeyType="done"
+              onSubmitEditing={handleSubmit}
+              maxLength={20}
+            />
+            {value.length > 0 && (
+              <Pressable onPress={() => setValue("")} hitSlop={8}>
+                <Feather name="x" size={16} color={C.textTertiary} />
+              </Pressable>
+            )}
+          </View>
 
-  const renderArticle = ({
-    item,
-    index,
-  }: {
-    item: NewsItem;
-    index: number;
-  }) => (
+          <Text
+            style={{
+              fontSize: 12,
+              color: C.textTertiary,
+              marginTop: 8,
+              marginBottom: 24,
+            }}
+          >
+            최대 20자 · 특수문자 제외
+          </Text>
+
+          {/* 확인 버튼 */}
+          <Pressable
+            onPress={handleSubmit}
+            disabled={!value.trim() || isPending}
+            style={({ pressed }) => ({
+              backgroundColor:
+                value.trim() && !isPending ? "#FFD55F" : "#E5E8EB",
+              borderRadius: 16,
+              height: 52,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.85 : 1,
+            })}
+          >
+            {isPending ? (
+              <ActivityIndicator size="small" color={C.text} />
+            ) : (
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "600",
+                  color: value.trim() ? C.text : C.textTertiary,
+                }}
+              >
+                추가하기
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+// ── 뉴스 아이템
+function ArticleItem({ item, index }: { item: NewsItem; index: number }) {
+  const handlePress = useCallback(() => {
+    if (Platform.OS !== "web")
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Linking.openURL(item.link);
+  }, [item.link]);
+
+  return (
     <Animated.View
       entering={FadeInDown.delay(index * 50)
         .duration(300)
@@ -108,8 +181,7 @@ export default function BeeNewsScreen() {
       className="mb-3"
     >
       <Pressable
-        onPress={() => handleOpenLink(item.link)}
-        data-testid={`button-news-${index}`}
+        onPress={handlePress}
         className="bg-white rounded-xl p-4 flex-row items-center gap-5"
       >
         <View className="flex-1 gap-3">
@@ -129,57 +201,141 @@ export default function BeeNewsScreen() {
             </Text>
           </View>
         </View>
-        <Feather
-          name="chevron-right"
-          size={18}
-          color={TossColors.textTertiary}
-        />
+        <Feather name="chevron-right" size={18} color={C.textTertiary} />
       </Pressable>
     </Animated.View>
   );
+}
+
+// ── 메인 스크린
+export default function BeeNewsScreen() {
+  const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedKeyword, setSelectedKeyword] = useState(DEFAULT_KEYWORDS[0]);
+  const [sheetVisible, setSheetVisible] = useState(false);
+
+  const {
+    data: news = [],
+    isLoading: newsLoading,
+    error,
+    refetch,
+  } = useNews(selectedKeyword);
+  const { data: userKeywords = [], isLoading: kwLoading } =
+    useInterestKeywords();
+  const { mutate: addKeyword, isPending } = useAddInterestKeyword();
+
+  // 기본 키워드 + 사용자 키워드 병합 (중복 제거)
+  const allKeywords = [
+    ...DEFAULT_KEYWORDS,
+    ...userKeywords
+      .map((k: { keyword: any }) => k.keyword)
+      .filter((k: string) => !DEFAULT_KEYWORDS.includes(k)),
+  ];
+
+  const handleKeywordChange = useCallback(
+    (keyword: string) => {
+      if (keyword === selectedKeyword) return;
+      if (Platform.OS !== "web")
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setSelectedKeyword(keyword);
+      setCurrentPage(1);
+    },
+    [selectedKeyword],
+  );
+
+  const handleAddKeyword = useCallback(
+    (kw: string) => {
+      addKeyword(kw, {
+        onSuccess: () => {
+          setSheetVisible(false);
+          setSelectedKeyword(kw);
+          setCurrentPage(1);
+        },
+      });
+    },
+    [addKeyword],
+  );
 
   const totalPages = Math.max(1, Math.ceil(news.length / PAGE_SIZE));
+  const pagedNews = news.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   return (
     <View className="flex-1 bg-gray-100">
-      <AppHeader title="새 소식" onBack={() => navigation.goBack()} />
-      <View className="bg-white py-2.5 border-b border-gray-200">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
-          {KEYWORDS.map((kw) => (
-            <Pressable
-              key={kw.value}
-              onPress={() => handleKeywordChange(kw.value)}
-              data-testid={`button-keyword-${kw.value}`}
-              className={`px-4 py-2 rounded-full mr-2 ${selectedKeyword === kw.value ? "bg-yellow-300" : "bg-gray-100"}`}
-            >
-              <Text
-                className={`text-sm font-semibold ${selectedKeyword === kw.value ? "text-gray-900" : "text-gray-500"}`}
+      <AppHeader title="꿀소식" onBack={() => navigation.goBack()} />
+
+      {/* 키워드 바 */}
+      <View className="bg-white border-b border-gray-200">
+        {kwLoading ? (
+          <KeywordChipSkeleton />
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              gap: 8,
+            }}
+          >
+            {allKeywords.map((kw) => (
+              <Pressable
+                key={kw}
+                onPress={() => handleKeywordChange(kw)}
+                className={`px-4 py-2 rounded-full ${selectedKeyword === kw ? "bg-yellow-300" : "bg-gray-100"}`}
               >
-                {kw.label}
+                <Text
+                  className={`text-sm font-semibold ${selectedKeyword === kw ? "text-gray-900" : "text-gray-500"}`}
+                >
+                  {kw}
+                </Text>
+              </Pressable>
+            ))}
+
+            {/* + 키워드 추가 버튼 */}
+            <Pressable
+              onPress={() => {
+                if (Platform.OS !== "web")
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSheetVisible(true);
+              }}
+              className="flex-row items-center gap-1 px-3 py-2 rounded-full border border-dashed border-gray-300"
+            >
+              <Feather name="plus" size={14} color={C.textSecondary} />
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: C.textSecondary,
+                }}
+              >
+                추가
               </Text>
             </Pressable>
-          ))}
-        </ScrollView>
+          </ScrollView>
+        )}
       </View>
 
-      {isLoading ? (
-        <View className="flex-1 items-center justify-center gap-3">
-          <ActivityIndicator size="large" color={TossColors.primaryLight} />
-          <Text className="text-base text-gray-500">뉴스를 불러오는 중...</Text>
+      {/* 뉴스 목록 */}
+      {newsLoading ? (
+        <View className="px-4 pt-4">
+          {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            <NewsCardSkeleton key={i} />
+          ))}
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center gap-4 p-10">
-          <Feather name="wifi-off" size={48} color={TossColors.textTertiary} />
+          <Feather name="wifi-off" size={48} color={C.textTertiary} />
           <Text className="text-base text-gray-500 text-center leading-6">
-            {String(error?.message || "뉴스를 불러오지 못했어요.")}
+            {error instanceof Error
+              ? error.message
+              : "뉴스를 불러오지 못했어요."}
           </Text>
           <Pressable
             onPress={() => refetch()}
-            data-testid="button-retry"
             className="bg-yellow-300 px-6 py-3 rounded-xl"
           >
             <Text className="text-base font-semibold text-gray-900">
@@ -189,37 +345,31 @@ export default function BeeNewsScreen() {
         </View>
       ) : news.length === 0 ? (
         <View className="flex-1 items-center justify-center gap-4 p-10">
-          <Feather name="file-text" size={48} color={TossColors.textTertiary} />
+          <Feather name="file-text" size={48} color={C.textTertiary} />
           <Text className="text-base text-gray-500 text-center">
-            수정벌 관련 뉴스가 없습니다.
+            '{selectedKeyword}' 관련 뉴스가 없어요.
           </Text>
         </View>
       ) : (
         <FlatList
-          data={news.slice(
-            (currentPage - 1) * PAGE_SIZE,
-            currentPage * PAGE_SIZE,
+          data={pagedNews}
+          renderItem={({ item, index }) => (
+            <ArticleItem item={item} index={index} />
           )}
-          renderItem={renderArticle}
           keyExtractor={(item) => item.link}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             padding: 16,
-            gap: 1,
             paddingBottom: insets.bottom + 20,
           }}
           ListHeaderComponent={
             <Animated.View
               entering={FadeInDown.duration(300)}
-              className="flex-row items-center gap-1.5 mb-1 px-0"
+              className="flex-row items-center gap-1.5 mb-3"
             >
-              <Feather
-                name="file-text"
-                size={15}
-                color={TossColors.primaryLight}
-              />
+              <Feather name="file-text" size={15} color={C.primaryLight} />
               <Text className="text-base font-semibold text-gray-900">
-                '{selectedKeyword}' 관련 최신 뉴스
+                '{selectedKeyword}' 최신 소식
               </Text>
             </Animated.View>
           }
@@ -227,11 +377,19 @@ export default function BeeNewsScreen() {
             <Pagination
               page={currentPage}
               totalPages={totalPages}
-              onPage={handlePageChange}
+              onPage={setCurrentPage}
             />
           }
         />
       )}
+
+      {/* 키워드 추가 시트 */}
+      <AddKeywordSheet
+        visible={sheetVisible}
+        onClose={() => setSheetVisible(false)}
+        onAdd={handleAddKeyword}
+        isPending={isPending}
+      />
     </View>
   );
 }
