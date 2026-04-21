@@ -281,7 +281,7 @@ export default function Profile() {
             </View>
           </View>
           <View className="h-px bg-gray-100 ml-11" />
-          <MenuItem icon="help-circle" label="고객센터" onPress={() => {}} />
+          <MenuItem icon="help-circle" label="문의하기" onPress={() => router.push('/bee-chat-inquiry')} />
           <View className="h-px bg-gray-100 ml-11" />
           <MenuItem icon="file-text" label="이용약관" onPress={() => {}} />
           <View className="h-px bg-gray-100 ml-11" />

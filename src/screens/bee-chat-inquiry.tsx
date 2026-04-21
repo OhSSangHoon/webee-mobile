@@ -23,20 +23,12 @@ interface InquiryModalProps {
 export default function InquiryModal({ visible, onClose }: InquiryModalProps) {
   const insets = useSafeAreaInsets();
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [work, setWork] = useState("");
-  const [interest, setInterest] = useState("");
   const [extra, seTextra] = useState("");
   const [consent, setConsent] = useState(false);
 
-  const canSubmit = name.trim() !== "" && email.trim() !== "" && consent;
+  const canSubmit = consent;
 
   const handleClose = () => {
-    setName("");
-    setEmail("");
-    setWork("");
-    setInterest("");
     seTextra("");
     setConsent(false);
     onClose();
@@ -54,11 +46,6 @@ export default function InquiryModal({ visible, onClose }: InquiryModalProps) {
     handleClose();
   }, [canSubmit]);
 
-  // 공통 인풋 스타일
-  const inputStyle =
-    "border border-[#E5E8EB] rounded-xl px-3.5 py-3 text-base text-[#191F28] mb-[18px] bg-white";
-
-  // 공통 라벨 스타일
   const labelStyle = "text-[13px] font-semibold text-[#8B95A1] mb-2 tracking-wide";
 
   return (
@@ -78,6 +65,7 @@ export default function InquiryModal({ visible, onClose }: InquiryModalProps) {
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             maxHeight: "90%",
+            minHeight: "80%",
           }}
         >
           {/* 핸들 + 닫기 버튼 */}
@@ -125,52 +113,6 @@ export default function InquiryModal({ visible, onClose }: InquiryModalProps) {
               도입 문의나 궁금한 점을 남겨주시면,{"\n"}확인 후 빠르게 답변드릴게요.
             </Text>
 
-            {/* 이름 */}
-            <Text className={labelStyle}>이름</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="홍길동"
-              placeholderTextColor="#CDD1D6"
-              className={inputStyle}
-              data-testid="input-inquiry-name"
-            />
-
-            {/* 이메일 */}
-            <Text className={labelStyle}>이메일</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="example@email.com"
-              placeholderTextColor="#CDD1D6"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              className={inputStyle}
-              data-testid="input-inquiry-email"
-            />
-
-            {/* 하고 계신 일 */}
-            <Text className={labelStyle}>하고 계신 일은 무엇인가요?</Text>
-            <TextInput
-              value={work}
-              onChangeText={setWork}
-              placeholder="예: 딸기 농장 운영"
-              placeholderTextColor="#CDD1D6"
-              className={inputStyle}
-              data-testid="input-inquiry-work"
-            />
-
-            {/* 관심 활용 방안 */}
-            <Text className={labelStyle}>관심 있는 활용 방안이 있다면 적어주세요</Text>
-            <TextInput
-              value={interest}
-              onChangeText={setInterest}
-              placeholder="예: 스마트벌통 모니터링, 수정벌 추천"
-              placeholderTextColor="#CDD1D6"
-              className={inputStyle}
-              data-testid="input-inquiry-interest"
-            />
-
             {/* 추가 내용 */}
             <Text className={labelStyle}>추가로 남기고 싶은 내용</Text>
             <TextInput
@@ -180,7 +122,7 @@ export default function InquiryModal({ visible, onClose }: InquiryModalProps) {
               placeholderTextColor="#CDD1D6"
               multiline
               textAlignVertical="top"
-              className="border border-[#E5E8EB] rounded-xl px-3.5 py-3 text-base text-[#191F28] mb-6 bg-white min-h-[100px]"
+              className="border border-[#E5E8EB] rounded-xl px-3.5 py-3 text-base text-[#191F28] mb-6 bg-white min-h-[200px]"
               data-testid="input-inquiry-extra"
             />
 
