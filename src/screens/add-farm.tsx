@@ -6,7 +6,12 @@ import {
   TextInput,
   Alert,
   ScrollView,
+  Modal,
+  Platform,
 } from "react-native";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -15,6 +20,22 @@ import { useCreateFarm } from "@/features/farm";
 import { useKeyboard } from "@/hooks/useKeyboard";
 import type { UserCropCreateRequest, CultivationType } from "@/types/farm";
 import { CULTIVATION_TYPES } from "@/constants/farm";
+
+type PickerTarget = "harvestStart" | "harvestEnd";
+
+const formatDate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}년 ${m}월 ${d}일`;
+};
+
+const toISODate = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
 
 export default function AddFarm() {
   const router = useRouter();
@@ -31,22 +52,69 @@ export default function AddFarm() {
   const [plantingMonth, setPlantingMonth] = useState("");
   const [plantingDay, setPlantingDay] = useState("");
 
-  const isValidDate = () => {
+  const [harvestStartDate, setHarvestStartDate] = useState<Date | null>(null);
+  const [harvestEndDate, setHarvestEndDate] = useState<Date | null>(null);
+
+  // iOS 모달용 임시 날짜 (확인 누르기 전까지 반영 안 함)
+  const [tempDate, setTempDate] = useState<Date>(new Date());
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<PickerTarget>("harvestStart");
+
+  // Android는 DateTimePicker가 직접 다이얼로그로 뜸
+  const [androidPickerVisible, setAndroidPickerVisible] = useState(false);
+
+  const openPicker = (target: PickerTarget) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const current =
+      target === "harvestStart"
+        ? harvestStartDate ?? new Date()
+        : harvestEndDate ?? new Date();
+    setPickerTarget(target);
+    setTempDate(current);
+    if (Platform.OS === "ios") {
+      setPickerVisible(true);
+    } else {
+      setAndroidPickerVisible(true);
+    }
+  };
+
+  const confirmPicker = () => {
+    if (pickerTarget === "harvestStart") {
+      setHarvestStartDate(tempDate);
+    } else {
+      setHarvestEndDate(tempDate);
+    }
+    setPickerVisible(false);
+  };
+
+  const onAndroidChange = (event: DateTimePickerEvent, selected?: Date) => {
+    setAndroidPickerVisible(false);
+    if (event.type === "set" && selected) {
+      if (pickerTarget === "harvestStart") {
+        setHarvestStartDate(selected);
+      } else {
+        setHarvestEndDate(selected);
+      }
+    }
+  };
+
+  const isValidPlantingDate = () => {
     const year = parseInt(plantingYear, 10);
     const month = parseInt(plantingMonth, 10);
     const day = parseInt(plantingDay, 10);
-
     if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
-    if (year < 2000 || year > 2030) return false;
+    if (year < 2000 || year > 2040) return false;
     if (month < 1 || month > 12) return false;
     if (day < 1 || day > 31) return false;
-
     return true;
   };
 
-  const canSubmit = () => {
-    return cultivationType !== "" && area.trim() !== "" && isValidDate();
-  };
+  const canSubmit = () =>
+    cultivationType !== "" &&
+    area.trim() !== "" &&
+    isValidPlantingDate() &&
+    harvestStartDate !== null &&
+    harvestEndDate !== null;
 
   const handleSubmit = () => {
     if (!canSubmit()) return;
@@ -57,9 +125,10 @@ export default function AddFarm() {
       cultivationType: cultivationType as CultivationType,
       cultivationArea: parseInt(area, 10),
       plantingDate: `${plantingYear}-${plantingMonth.padStart(2, "0")}-${plantingDay.padStart(2, "0")}`,
+      harvestStartDate: toISODate(harvestStartDate!),
+      harvestEndDate: toISODate(harvestEndDate!),
     };
 
-    // Optional fields
     if (cropName.trim()) requestData.name = cropName.trim();
     if (variety.trim()) requestData.variety = variety.trim();
     if (address.trim()) requestData.cultivationAddress = address.trim();
@@ -85,7 +154,6 @@ export default function AddFarm() {
   };
 
   const isLoading = createFarmMutation.isPending;
-
   const insets = useSafeAreaInsets();
   const { isVisible: isKeyboardVisible, keyboardHeight } = useKeyboard();
 
@@ -175,7 +243,8 @@ export default function AddFarm() {
               작물명
             </Text>
             <TextInput
-              className="bg-gray-50 rounded-xl px-4 py-3.5 text-base text-gray-900"
+              className="bg-gray-50 rounded-xl px-4 text-base text-gray-900"
+              style={{ height: 50, paddingVertical: 14 }}
               value={cropName}
               onChangeText={setCropName}
               placeholder="예: 딸기, 토마토"
@@ -188,7 +257,8 @@ export default function AddFarm() {
               품종 (선택)
             </Text>
             <TextInput
-              className="bg-gray-50 rounded-xl px-4 py-3.5 text-base text-gray-900"
+              className="bg-gray-50 rounded-xl px-4 text-base text-gray-900"
+              style={{ height: 50, paddingVertical: 14 }}
               value={variety}
               onChangeText={setVariety}
               placeholder="예: 설향, 금실"
@@ -208,7 +278,8 @@ export default function AddFarm() {
               재배 지역
             </Text>
             <TextInput
-              className="bg-gray-50 rounded-xl px-4 py-3.5 text-base text-gray-900"
+              className="bg-gray-50 rounded-xl px-4 text-base text-gray-900"
+              style={{ height: 50, paddingVertical: 14 }}
               value={address}
               onChangeText={setAddress}
               placeholder="예: 충청남도 논산시 연무읍"
@@ -229,14 +300,15 @@ export default function AddFarm() {
             </View>
             <View className="flex-row items-center gap-2">
               <TextInput
-                className="flex-1 bg-gray-50 rounded-xl px-4 py-3.5 text-base text-gray-900"
+                className="flex-1 bg-gray-50 rounded-xl px-4 text-base text-gray-900"
+                style={{ height: 50, paddingVertical: 14 }}
                 value={area}
                 onChangeText={setArea}
                 placeholder="0"
                 placeholderTextColor="#C7C7CC"
                 keyboardType="numeric"
               />
-              <View className="bg-gray-200 px-4 py-3.5 rounded-xl">
+              <View className="bg-gray-200 px-4 rounded-xl" style={{ height: 50, justifyContent: 'center' }}>
                 <Text className="text-base font-semibold text-gray-600">
                   평
                 </Text>
@@ -246,7 +318,7 @@ export default function AddFarm() {
         </View>
 
         {/* 정식일 */}
-        <View className="bg-white rounded-2xl p-5">
+        <View className="bg-white rounded-2xl p-5 mb-4">
           <View className="flex-row items-center justify-between mb-1">
             <Text className="text-base font-bold text-gray-900">정식일</Text>
             <View className="bg-blue-100 px-2 py-0.5 rounded">
@@ -260,7 +332,8 @@ export default function AddFarm() {
           <View className="flex-row items-center gap-2">
             <View className="flex-1 flex-row items-center gap-1">
               <TextInput
-                className="flex-1 bg-gray-50 rounded-xl px-3 py-3.5 text-base text-gray-900 text-center"
+                className="flex-1 bg-gray-50 rounded-xl px-3 text-base text-gray-900 text-center"
+                style={{ height: 50, paddingVertical: 14 }}
                 value={plantingYear}
                 onChangeText={setPlantingYear}
                 placeholder="2024"
@@ -272,7 +345,8 @@ export default function AddFarm() {
             </View>
             <View className="flex-1 flex-row items-center gap-1">
               <TextInput
-                className="flex-1 bg-gray-50 rounded-xl px-3 py-3.5 text-base text-gray-900 text-center"
+                className="flex-1 bg-gray-50 rounded-xl px-3 text-base text-gray-900 text-center"
+                style={{ height: 50, paddingVertical: 14 }}
                 value={plantingMonth}
                 onChangeText={setPlantingMonth}
                 placeholder="01"
@@ -284,7 +358,8 @@ export default function AddFarm() {
             </View>
             <View className="flex-1 flex-row items-center gap-1">
               <TextInput
-                className="flex-1 bg-gray-50 rounded-xl px-3 py-3.5 text-base text-gray-900 text-center"
+                className="flex-1 bg-gray-50 rounded-xl px-3 text-base text-gray-900 text-center"
+                style={{ height: 50, paddingVertical: 14 }}
                 value={plantingDay}
                 onChangeText={setPlantingDay}
                 placeholder="01"
@@ -295,6 +370,49 @@ export default function AddFarm() {
               <Text className="text-sm font-medium text-gray-600">일</Text>
             </View>
           </View>
+        </View>
+
+        {/* 수확 기간 */}
+        <View className="bg-white rounded-2xl p-5">
+          <View className="flex-row items-center justify-between mb-1">
+            <Text className="text-base font-bold text-gray-900">수확 기간</Text>
+            <View className="bg-blue-100 px-2 py-0.5 rounded">
+              <Text className="text-xs font-semibold text-blue-600">필수</Text>
+            </View>
+          </View>
+          <Text className="text-sm text-gray-600 mb-4">
+            수확 시작일과 마감일을 선택해주세요
+          </Text>
+
+          <Text className="text-sm font-semibold text-gray-600 mb-2">
+            수확 시작일
+          </Text>
+          <Pressable
+            onPress={() => openPicker("harvestStart")}
+            className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-3.5 mb-4 active:bg-gray-100"
+          >
+            <Text
+              className={`text-base ${harvestStartDate ? "text-gray-900" : "text-gray-400"}`}
+            >
+              {harvestStartDate ? formatDate(harvestStartDate) : "날짜를 선택하세요"}
+            </Text>
+            <Feather name="calendar" size={18} color="#9CA3AF" />
+          </Pressable>
+
+          <Text className="text-sm font-semibold text-gray-600 mb-2">
+            수확 마감일
+          </Text>
+          <Pressable
+            onPress={() => openPicker("harvestEnd")}
+            className="flex-row items-center justify-between bg-gray-50 rounded-xl px-4 py-3.5 active:bg-gray-100"
+          >
+            <Text
+              className={`text-base ${harvestEndDate ? "text-gray-900" : "text-gray-400"}`}
+            >
+              {harvestEndDate ? formatDate(harvestEndDate) : "날짜를 선택하세요"}
+            </Text>
+            <Feather name="calendar" size={18} color="#9CA3AF" />
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -322,6 +440,56 @@ export default function AddFarm() {
           </Text>
         </Pressable>
       </View>
+
+      {/* iOS 날짜 선택 모달 */}
+      {Platform.OS === "ios" && (
+        <Modal
+          visible={pickerVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setPickerVisible(false)}
+        >
+          <Pressable
+            className="flex-1 bg-black/40"
+            onPress={() => setPickerVisible(false)}
+          />
+          <View className="bg-white" style={{ paddingBottom: insets.bottom }}>
+            <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
+              <Pressable onPress={() => setPickerVisible(false)}>
+                <Text className="text-base text-gray-500">취소</Text>
+              </Pressable>
+              <Text className="text-base font-semibold text-gray-900">
+                {pickerTarget === "harvestStart" ? "수확 시작일" : "수확 마감일"}
+              </Text>
+              <Pressable onPress={confirmPicker}>
+                <Text className="text-base font-semibold text-yellow-500">
+                  확인
+                </Text>
+              </Pressable>
+            </View>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display="spinner"
+              locale="ko-KR"
+              onChange={(_: DateTimePickerEvent, selected?: Date) => {
+                if (selected) setTempDate(selected);
+              }}
+              style={{ height: 200 }}
+            />
+          </View>
+        </Modal>
+      )}
+
+      {/* Android 날짜 선택기 */}
+      {Platform.OS === "android" && androidPickerVisible && (
+        <DateTimePicker
+          value={tempDate}
+          mode="date"
+          display="default"
+          onChange={onAndroidChange}
+        />
+      )}
     </View>
   );
 }
