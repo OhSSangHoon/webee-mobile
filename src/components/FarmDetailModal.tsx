@@ -21,7 +21,13 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <View className="flex-row items-center justify-between py-4 border-b border-gray-100">
       <Text className="text-base text-gray-800">{label}</Text>
-      <Text className="text-base font-semibold text-gray-900">{value}</Text>
+      <Text
+        className="flex-1 ml-4 text-base font-semibold text-gray-900 text-right"
+        numberOfLines={2}
+        ellipsizeMode="tail"
+      >
+        {value}
+      </Text>
     </View>
   );
 }

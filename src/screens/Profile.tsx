@@ -133,18 +133,15 @@ export default function Profile() {
                         color="#3B82F6"
                       />
                     </View>
-                    <View className="flex-1 flex-row items-center gap-1.5">
-                      <Text className="text-sm font-semibold text-gray-900">
+                    <View className="flex-1 mr-2">
+                      <Text
+                        className="text-sm font-semibold text-gray-900"
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
                         {farm.name || '이름 없음'}
+                        {farm.variety ? ` · ${farm.variety}` : ''}
                       </Text>
-                      {farm.variety ? (
-                        <>
-                          <Text className="text-sm text-gray-900">·</Text>
-                          <Text className="text-sm text-gray-900">
-                            {farm.variety}
-                          </Text>
-                        </>
-                      ) : null}
                     </View>
                     <Feather name="chevron-right" size={16} color="#C7C7CC" />
                   </Pressable>
