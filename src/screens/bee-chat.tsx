@@ -15,7 +15,6 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { useNavigation } from "@react-navigation/native";
 
-import InquiryModal from "./bee-chat-inquiry";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AppHeader from "@/components/AppHeader";
 
@@ -82,7 +81,6 @@ export default function BeeChatScreen() {
   ]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [inquiryVisible, setInquiryVisible] = useState(false);
   const replyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 첫 유저 메시지 이전인지 여부
@@ -154,11 +152,6 @@ export default function BeeChatScreen() {
       <AppHeader
         title="채팅 및 문의"
         onBack={() => navigation.goBack()}
-        rightAction={{
-          icon: "mail",
-          onPress: () => setInquiryVisible(true),
-          testId: "button-inquiry",
-        }}
       />
       // 설정 버튼 있는 화면
       <ScrollView
@@ -339,11 +332,6 @@ export default function BeeChatScreen() {
           </Pressable>
         </View>
       </View>
-      {/* ── 문의 모달 ── */}
-      <InquiryModal
-        visible={inquiryVisible}
-        onClose={() => setInquiryVisible(false)}
-      />
     </KeyboardAvoidingView>
   );
 }

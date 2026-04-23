@@ -261,9 +261,9 @@ export function PromoBanner() {
             imageStyle={{ borderRadius: 18 }}
             resizeMode="cover"
           >
-            <View className="flex-1 justify-center px-[18px]">
-              {/* 오렌지 닷 + 배지 */}
-              <View className="flex-row items-center gap-1.5 mt-4">
+            {/* 오렌지 닷 + 배지 */}
+            <View className="px-[18px] pt-5">
+              <View className="flex-row items-center gap-1.5">
                 <View className="w-1.5 h-1.5 rounded-full bg-orange-400" />
                 <Text
                   style={{ fontFamily: "Pretendard-Bold" }}
@@ -273,8 +273,9 @@ export function PromoBanner() {
                 </Text>
               </View>
             </View>
-            {/* 타이틀 — 수직 중앙 */}
-            <View className="flex-1 justify-around px-[20px] mb-5">
+
+            {/* 타이틀 — 남은 공간 전체 */}
+            <View className="flex-1 justify-center px-[20px]">
               <AnimatedTitle
                 copy={item.copies[curCopies[index]]}
                 hlColor={item.hlColor}
