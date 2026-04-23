@@ -1,0 +1,97 @@
+import { memo } from "react";
+import { View, Text, Pressable } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { LikeButton } from "./LikeButton";
+import { formatRelativeTime } from "@/components/community/utils/time";
+import type { PostListItem } from "@/types/community";
+
+interface PostCardProps {
+  post: PostListItem;
+  onPress: (postId: number) => void;
+}
+
+function PostCardComponent({ post, onPress }: PostCardProps) {
+  return (
+    <Pressable
+      onPress={() => onPress(post.postId)}
+      className="bg-white rounded-xl p-4 mx-5 mb-2.5"
+      style={{
+        borderWidth: 1,
+        borderColor: "#e5e8eb",
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: 1,
+      }}
+    >
+      {/* 헤더 — 작성자 정보는 API 미구현이라 더미 */}
+      <View className="flex-row items-center gap-2 mb-2.5">
+        <View
+          className="w-8 h-8 rounded-full items-center justify-center overflow-hidden"
+          style={{
+            backgroundColor: "#f2f4f6",
+            borderWidth: 1.5,
+            borderColor: "#e5e8eb",
+          }}
+        >
+          <Feather name="user" size={14} color="#8b95a1" />
+        </View>
+        <View className="flex-1 min-w-0">
+          <Text
+            className="text-[13px] font-semibold"
+            style={{ color: "#191f28" }}
+            numberOfLines={1}
+          >
+            농부 · {post.postId}번째 게시글
+          </Text>
+          <Text className="text-[11px]" style={{ color: "#8b95a1" }}>
+            {formatRelativeTime(post.createdAt)}
+          </Text>
+        </View>
+      </View>
+
+      {/* 제목 */}
+      <Text
+        className="text-[15px] font-semibold leading-5 mb-1.5"
+        style={{ color: "#191f28" }}
+        numberOfLines={2}
+      >
+        {post.title}
+      </Text>
+
+      {/* 본문 미리보기 */}
+      <Text
+        className="text-[13px] leading-5 mb-2.5"
+        style={{ color: "#6b7684" }}
+        numberOfLines={2}
+      >
+        {post.content}
+      </Text>
+
+      {/* 액션 바 */}
+      <View
+        className="flex-row items-center gap-4 pt-2.5"
+        style={{ borderTopWidth: 1, borderTopColor: "#f2f4f6" }}
+      >
+        <LikeButton initialCount={post.likeCount} />
+        <View className="flex-row items-center gap-1">
+          <Feather name="message-square" size={15} color="#8b95a1" />
+          <Text className="text-xs font-medium" style={{ color: "#8b95a1" }}>
+            {post.commentCount}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+export const PostCard = memo(PostCardComponent, (prev, next) => {
+  return (
+    prev.post.postId === next.post.postId &&
+    prev.post.title === next.post.title &&
+    prev.post.content === next.post.content &&
+    prev.post.likeCount === next.post.likeCount &&
+    prev.post.commentCount === next.post.commentCount
+  );
+});
