@@ -30,7 +30,7 @@ export function CategoryTabs({ active, onChange }: CategoryTabsProps) {
                 }}
               >
                 <Text
-                  className="text-sm whitespace-nowrap"
+                  className="text-sm"
                   style={{
                     color: isActive ? "#191f28" : "#8b95a1",
                     fontWeight: isActive ? "600" : "400",
