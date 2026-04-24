@@ -1,41 +1,85 @@
 import { View, Text, Animated, Easing } from "react-native";
 import { useEffect, useRef } from "react";
-import Svg, { Circle, Rect, Ellipse, G, Defs, LinearGradient, Stop } from "react-native-svg";
+import Svg, {
+  Circle,
+  Rect,
+  Ellipse,
+  G,
+  Defs,
+  LinearGradient,
+  Stop,
+} from "react-native-svg";
 
 export function HeroBanner() {
   const floatAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(floatAnim, { toValue: 1, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(floatAnim, { toValue: 0, duration: 1500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-      ])
-    ).start();
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
   }, []);
 
-  const translateY = floatAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -8] });
+  const translateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -8],
+  });
 
   return (
-    <View className="mx-5 mt-4 rounded-2xl overflow-hidden" style={{ backgroundColor: "#0d1520", minHeight: 140 }}>
-      <View className="absolute inset-0" style={{ backgroundColor: "#1a2535", opacity: 0.6 }} />
+    <View
+      className="mx-5 mt-4 rounded-2xl overflow-hidden"
+      style={{ backgroundColor: "#0d1520", minHeight: 140 }}
+    >
+      <View
+        className="absolute inset-0"
+        style={{ backgroundColor: "#1a2535", opacity: 0.6 }}
+      />
 
       <View className="p-5 relative z-10">
         <View className="flex-row items-center gap-1.5 self-start bg-orange-500/15 border border-orange-500/30 px-2.5 py-1 rounded-full mb-2.5">
           <View className="w-1.5 h-1.5 bg-orange-500 rounded-full" />
-          <Text className="text-[11px] font-semibold" style={{ color: "#f97316" }}>수정벌 농가 커뮤니티</Text>
+          <Text
+            className="text-[11px] font-semibold"
+            style={{ color: "#f97316" }}
+          >
+            수정벌 농가 커뮤니티
+          </Text>
         </View>
         <Text className="text-white text-xl font-bold leading-7 mb-1">
           함께 나누면{"\n"}
           <Text style={{ color: "#f97316" }}>착과율</Text>이 높아져요
         </Text>
-        <Text className="text-[13px] leading-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+        <Text
+          className="text-[13px] leading-5"
+          style={{ color: "rgba(255,255,255,0.55)" }}
+        >
           이번 주 수정벌 현장 노하우 23개 공유됨
         </Text>
       </View>
 
       {/* 3D 벌통 에셋 */}
-      <Animated.View style={{ position: "absolute", right: -10, bottom: -10, transform: [{ translateY }] }}>
+      <Animated.View
+        style={{
+          position: "absolute",
+          right: -10,
+          bottom: -10,
+          transform: [{ translateY }],
+        }}
+      >
         <Svg width={120} height={120} viewBox="0 0 130 130" fill="none">
           <Defs>
             <LinearGradient id="hiveGrad" x1="35" y1="60" x2="95" y2="105">
