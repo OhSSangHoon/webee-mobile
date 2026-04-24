@@ -36,7 +36,7 @@ export default function PostDetailScreen() {
   const router = useRouter();
   const id = Number(postId);
 
-  const { data: post, isLoading, isError, refetch } = usePost(id);
+  const { data: post, isLoading, isError, error, refetch } = usePost(id);
   const { mutate: deletePost, isPending: isDeleting } = useDeletePost();
 
   const handleDelete = useCallback(() => {
@@ -81,13 +81,18 @@ export default function PostDetailScreen() {
   }
 
   // ── 에러 ──────────────────────────────────────────────────────────────────
+  const status = (error as any)?.response?.status;
   if (isError || !post) {
     return (
       <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
         <AppBar onBack={() => router.back()} />
         <ErrorState
           onRetry={() => refetch()}
-          message="게시글을 불러오지 못했어요."
+          message={
+            status === 404
+              ? "삭제되었거나 존재하지 않는 게시글이에요."
+              : "게시글을 불러오지 못했어요."
+          }
         />
       </SafeAreaView>
     );
