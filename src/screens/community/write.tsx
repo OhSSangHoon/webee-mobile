@@ -39,8 +39,9 @@ import {
 export default function WriteScreen() {
   const { postId } = useLocalSearchParams<{ postId?: string }>();
   const router = useRouter();
-  const isEdit = !!postId;
-  const id = isEdit ? Number(postId) : null;
+  const parsedId = postId ? Number(postId) : NaN;
+  const id = Number.isFinite(parsedId) ? parsedId : null;
+  const isEdit = id !== null;
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
