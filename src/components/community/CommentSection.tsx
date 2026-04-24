@@ -137,7 +137,7 @@ export function CommentSection({ postId, commentCount }: CommentSectionProps) {
         style={{ borderBottomWidth: 1, borderBottomColor: "#f2f4f6" }}
       >
         <Text style={{ fontSize: 15, fontWeight: "700", color: "#191f28" }}>
-          댓글 {comments.length || commentCount}
+          + 댓글 {isLoading || isError ? commentCount : comments.length}
         </Text>
         {isError && (
           <Pressable onPress={() => refetch()}>
