@@ -15,7 +15,7 @@
  * - 기타 → 공통 에러 알림
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -30,7 +30,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-import { usePost, useCreatePost, useUpdatePost } from "@/features/community/post";
+import {
+  usePost,
+  useCreatePost,
+  useUpdatePost,
+} from "@/features/community/post";
 
 export default function WriteScreen() {
   const { postId } = useLocalSearchParams<{ postId?: string }>();
@@ -44,10 +48,12 @@ export default function WriteScreen() {
   // 수정 모드 — 기존 데이터 불러오기
   const { data: existingPost, isLoading: isFetchingPost } = usePost(id);
 
+  const initialized = useRef(false);
   useEffect(() => {
-    if (existingPost) {
+    if (existingPost && !initialized.current) {
       setTitle(existingPost.title);
       setContent(existingPost.content);
+      initialized.current = true;
     }
   }, [existingPost]);
 
@@ -76,7 +82,7 @@ export default function WriteScreen() {
                 : "수정에 실패했어요. 다시 시도해주세요.";
             Alert.alert("수정 실패", msg);
           },
-        }
+        },
       );
     } else {
       createPost(body, {
@@ -84,17 +90,36 @@ export default function WriteScreen() {
           router.replace(`/community/${newId}` as any);
         },
         onError: () => {
-          Alert.alert("등록 실패", "게시글 등록에 실패했어요. 다시 시도해주세요.");
+          Alert.alert(
+            "등록 실패",
+            "게시글 등록에 실패했어요. 다시 시도해주세요.",
+          );
         },
       });
     }
-  }, [isValid, isPending, isEdit, id, title, content, createPost, updatePost, router]);
+  }, [
+    isValid,
+    isPending,
+    isEdit,
+    id,
+    title,
+    content,
+    createPost,
+    updatePost,
+    router,
+  ]);
 
   // 수정 모드에서 기존 데이터 로딩 중
   if (isEdit && isFetchingPost) {
     return (
       <SafeAreaView className="flex-1 bg-white" edges={["top"]}>
-        <AppBar isEdit={isEdit} onBack={() => router.back()} onSubmit={handleSubmit} isValid={false} isPending={false} />
+        <AppBar
+          isEdit={isEdit}
+          onBack={() => router.back()}
+          onSubmit={handleSubmit}
+          isValid={false}
+          isPending={false}
+        />
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#8b95a1" />
         </View>
@@ -238,7 +263,12 @@ function AppBar({ isEdit, onBack, onSubmit, isValid, isPending }: AppBarProps) {
       }}
     >
       <Pressable
-        style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}
+        style={{
+          width: 40,
+          height: 40,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
         onPress={onBack}
       >
         <Feather name="x" size={22} color="#191f28" />
