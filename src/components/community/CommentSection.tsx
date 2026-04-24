@@ -91,12 +91,12 @@ export function CommentSection({ postId, commentCount }: CommentSectionProps) {
           onSuccess: () => setEditingId(null),
           onError: (e: any) => {
             console.log("댓글 수정 실패:", e);
-            const msg =
-              e?.response?.status === 403
-                ? "본인이 작성한 댓글만 수정할 수 있어요."
-                : "수정에 실패했어요.";
+            const is403 = e?.response?.status === 403;
+            const msg = is403
+              ? "본인이 작성한 댓글만 수정할 수 있어요."
+              : "수정에 실패했어요.";
             Alert.alert("수정 실패", msg);
-            setEditingId(null);
+            if (is403) setEditingId(null);
           },
         },
       );
@@ -137,7 +137,7 @@ export function CommentSection({ postId, commentCount }: CommentSectionProps) {
         style={{ borderBottomWidth: 1, borderBottomColor: "#f2f4f6" }}
       >
         <Text style={{ fontSize: 15, fontWeight: "700", color: "#191f28" }}>
-          + 댓글 {isLoading || isError ? commentCount : comments.length}
+          댓글 {isLoading || isError ? commentCount : comments.length}
         </Text>
         {isError && (
           <Pressable onPress={() => refetch()}>
