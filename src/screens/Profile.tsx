@@ -88,7 +88,9 @@ export default function Profile() {
         </View>
 
         {/* 프로필 관리 버튼 */}
-        <Pressable className="flex-row items-center bg-white rounded-2xl px-4 py-3.5 active:bg-gray-50">
+        <Pressable
+          className="flex-row items-center bg-white rounded-2xl px-4 py-3.5 active:bg-gray-50"
+        >
           <Feather name="edit-2" size={16} color="#6B7280" />
           <Text className="flex-1 text-sm font-medium text-gray-700 ml-3">프로필 관리</Text>
           <Feather name="chevron-right" size={16} color="#C7C7CC" />

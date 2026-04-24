@@ -51,10 +51,13 @@ export default function Settings() {
   const [notificationsExpanded, setNotificationsExpanded] = useState(true);
   const insets = useSafeAreaInsets();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    logout();
-    router.replace('/login');
+    try {
+        await logout();
+    } finally {
+      router.replace('/login');
+    }
   };
 
   const handleDeleteAccount = () => {
