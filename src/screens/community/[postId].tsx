@@ -198,14 +198,6 @@ export default function PostDetailScreen() {
             style={{ borderTopWidth: 1, borderTopColor: "#f2f4f6" }}
           >
             <LikeButton initialCount={post.likeCount} />
-            <View className="flex-row items-center gap-1.5">
-              <Feather name="message-square" size={16} color="#8b95a1" />
-              <Text
-                style={{ fontSize: 13, color: "#8b95a1", fontWeight: "500" }}
-              >
-                댓글 {post.commentCount}
-              </Text>
-            </View>
             <View style={{ flex: 1 }} />
             <Pressable>
               <Feather name="share-2" size={18} color="#8b95a1" />
