@@ -31,3 +31,7 @@ export async function uploadProfileImage(imageUri: string): Promise<string> {
 
   return response.data.data.profileImageUrl;
 }
+
+export async function withdrawUser(): Promise<void> {
+  await api.delete<ApiResponse<string>>('/api/v1/users/me');
+}
