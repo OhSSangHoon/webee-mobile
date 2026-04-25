@@ -179,10 +179,13 @@ export const useAuthStore = create<AuthState>()(
       },
 
       withdraw: async () => {
-        await api.delete('/api/v1/users/me');
-        delete api.defaults.headers.common['Authorization'];
-        queryClient.clear();
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+        try {
+          await api.delete('/api/v1/users/me');
+        } finally {
+          delete api.defaults.headers.common['Authorization'];
+          queryClient.clear();
+          set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+        }
       },
 
       setUser: (user) => {
